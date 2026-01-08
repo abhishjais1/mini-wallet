@@ -1,220 +1,353 @@
 import React, { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { useWallet } from '../hooks/index.js';
-import { LoadingSpinner, TransactionSkeleton, EmptyState } from './Loading.jsx';
-import { Toast } from './Toast.jsx';
+import { formatCurrency, formatDate, getTransactionIcon } from '../utils/formatters.js';
+import { Card, CardHeader, CardTitle, CardContent } from './ui/Card.jsx';
+import { Button } from './ui/Button.jsx';
+import { Input } from './ui/Input.jsx';
+import { Select, SelectOption } from './ui/Select.jsx';
+import { Badge, StatusBadge, TypeBadge } from './ui/Badge.jsx';
+import { Icon, IconContainer } from './ui/Icon.jsx';
+import { TransactionSkeleton } from './ui/Skeleton.jsx';
+import { NoResultsEmptyState, TransactionsEmptyState } from './ui/EmptyState.jsx';
+import { Modal } from './ui/Modal.jsx';
+import { ToastProvider, useToast } from './ui/Toast.jsx';
 
-export function TransactionHistory() {
-  const { transactions, loading, deleteTransaction } = useWallet();
-  const [toast, setToast] = useState(null);
+/**
+ * Transaction History Component
+ */
+function TransactionHistoryContent() {
+  const { transactions, loading, deleteTransaction, retryTransaction } = useWallet();
+  const { addToast } = useToast();
+
+  // Filter states
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
-  const [searchDate, setSearchDate] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
 
+  // Filter transactions
   const filteredTransactions = useMemo(() => {
     return transactions.filter((t) => {
+      // Status filter
       if (statusFilter !== 'all' && t.status !== statusFilter) return false;
+
+      // Type filter
       if (typeFilter !== 'all' && t.type !== typeFilter) return false;
-      if (searchDate) {
-        // Convert UTC timestamp to user's local date (YYYY-MM-DD format)
-        const date = new Date(t.timestamp);
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        const localDateString = `${year}-${month}-${day}`;
-        if (localDateString !== searchDate) return false;
+
+      // Start date filter
+      if (startDate) {
+        const transactionDate = new Date(t.timestamp);
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        if (transactionDate < start) return false;
       }
+
+      // End date filter
+      if (endDate) {
+        const transactionDate = new Date(t.timestamp);
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        if (transactionDate > end) return false;
+      }
+
       return true;
     });
-  }, [transactions, statusFilter, typeFilter, searchDate]);
+  }, [transactions, statusFilter, typeFilter, startDate, endDate]);
 
+  // Check if any filters are active
+  const hasActiveFilters =
+    statusFilter !== 'all' || typeFilter !== 'all' || startDate || endDate;
+
+  // Clear all filters
+  const clearFilters = () => {
+    setStatusFilter('all');
+    setTypeFilter('all');
+    setStartDate('');
+    setEndDate('');
+  };
+
+  // Handle delete
   const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this transaction?')) {
-      const result = await deleteTransaction(id);
-      if (result.success) {
-        setToast({ type: 'success', message: result.message });
-      } else {
-        setToast({ type: 'error', message: result.message });
-      }
+    const result = await deleteTransaction(id);
+    if (result.success) {
+      addToast(result.message, 'success');
+      setDeleteConfirm(null);
+    } else {
+      addToast(result.message, 'error');
     }
   };
 
-  const getTypeColor = (type) => {
+  // Handle retry for failed transactions
+  const handleRetry = async (id) => {
+    const result = await retryTransaction(id);
+    if (result.success) {
+      addToast(result.message, 'info');
+    } else {
+      addToast(result.message, 'error');
+    }
+  };
+
+  // Get transaction type icon and color
+  const getTypeConfig = (type) => {
     switch (type) {
       case 'credit':
-        return 'text-green-600';
+        return { icon: 'arrow-down-left', color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' };
       case 'debit':
-        return 'text-red-600';
+        return { icon: 'arrow-up-right', color: 'text-text-primary', bg: 'bg-surface-elevated', border: 'border-border' };
       case 'fee':
-        return 'text-yellow-600';
+        return { icon: 'receipt', color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20' };
       default:
-        return 'text-gray-600';
+        return { icon: 'circle', color: 'text-text-muted', bg: 'bg-surface-elevated', border: 'border-border' };
     }
-  };
-
-  const getTypeIcon = (type) => {
-    switch (type) {
-      case 'credit':
-        return '+';
-      case 'debit':
-        return '-';
-      case 'fee':
-        return '✓';
-      default:
-        return '•';
-    }
-  };
-
-  const getStatusBadge = (status) => {
-    const classes = {
-      success: 'bg-green-100 text-green-800',
-      failed: 'bg-red-100 text-red-800',
-      pending: 'bg-yellow-100 text-yellow-800',
-    };
-    return classes[status] || 'bg-gray-100 text-gray-800';
   };
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold dark:text-white">Transaction History</h2>
+    <div className="space-y-6 animate-slideUp">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold font-heading text-text-primary mb-1">
+            Transaction History
+          </h1>
+          <p className="text-text-secondary">
+            {filteredTransactions.length} of {transactions.length} transactions
+          </p>
+        </div>
+        <Link to="/">
+          <Button variant="ghost" size="sm">
+            <Icon name="arrow-left" size="sm" className="mr-1" />
+            Back
+          </Button>
+        </Link>
+      </div>
 
-      {/* Filters */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 border border-blue-200 dark:border-blue-700 rounded-lg shadow-md p-6 space-y-4">
-        <h3 className="font-semibold text-blue-900 dark:text-blue-200">Filters</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white dark:bg-slate-700 rounded-lg p-4 border border-gray-200 dark:border-slate-600">
-            <label
-                htmlFor="statusFilter"
-                className="block text-sm font-semibold text-blue-700 dark:text-blue-300 mb-2"
-                >
-                Status
-                </label>
-
-                <select
+      {/* Filters Card */}
+      <Card>
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Icon name="filter" size="md" />
+              Filters
+            </CardTitle>
+            {hasActiveFilters && (
+              <Button variant="ghost" size="sm" onClick={clearFilters}>
+                Clear all
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {/* Status Filter */}
+            <div>
+              <Select
                 id="statusFilter"
+                label="Status"
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="input-field"
-                >
-              <option value="all">All Status</option>
-              <option value="success">Success</option>
-              <option value="failed">Failed</option>
-              <option value="pending">Pending</option>
-            </select>
+              >
+                <option value="all">All Status</option>
+                <option value="success">Success</option>
+                <option value="pending">Pending</option>
+                <option value="failed">Failed</option>
+              </Select>
             </div>
 
-          <div className="bg-white dark:bg-slate-700 rounded-lg p-4 border border-gray-200 dark:border-slate-600">
-            <label
-                htmlFor="typeFilter"
-                className="block text-sm font-semibold text-purple-700 dark:text-purple-300 mb-2"
-                >
-                Type
-                </label>
-
-                <select
+            {/* Type Filter */}
+            <div>
+              <Select
                 id="typeFilter"
+                label="Type"
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value)}
-                className="input-field"
-                >
-              <option value="all">All Types</option>
-              <option value="credit">Credit</option>
-              <option value="debit">Debit</option>
-              <option value="fee">Fee</option>
-            </select>
+              >
+                <option value="all">All Types</option>
+                <option value="credit">Credit</option>
+                <option value="debit">Debit</option>
+                <option value="fee">Fee</option>
+              </Select>
             </div>
 
-          <div className="bg-white dark:bg-slate-700 rounded-lg p-4 border border-gray-200 dark:border-slate-600">
-            <label
-                htmlFor="dateFilter"
-                className="block text-sm font-semibold text-amber-700 dark:text-amber-300 mb-2"
-                >
-                Date
-                </label>
-
-                <input
-                id="dateFilter"
+            {/* Start Date */}
+            <div>
+              <Input
+                id="startDate"
                 type="date"
-                value={searchDate}
-                onChange={(e) => setSearchDate(e.target.value)}
-                className="input-field"
-                />
+                label="From Date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+              />
             </div>
-        </div>
-      </div>
+
+            {/* End Date */}
+            <div>
+              <Input
+                id="endDate"
+                type="date"
+                label="To Date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Transactions List */}
-      <div className="card">
-        {loading ? (
-          <div className="space-y-4">
-            {[...Array(5)].map((_, i) => (
-              <TransactionSkeleton key={i} />
-            ))}
-          </div>
-        ) : filteredTransactions.length === 0 ? (
-          <EmptyState
-            icon="📋"
-            title="No Transactions"
-            description={
-              transactions.length === 0
-                ? 'Start by adding money or making a transfer'
-                : 'No transactions match your filters'
-            }
-          />
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 dark:bg-slate-700 border-b dark:border-slate-600">
-                <tr>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 dark:text-white">Description</th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 dark:text-white">Type</th>
-                  <th className="px-6 py-3 text-right text-sm font-semibold text-gray-700 dark:text-white">Amount</th>
-                  <th className="px-6 py-3 text-center text-sm font-semibold text-gray-700 dark:text-white">Status</th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 dark:text-white">Date</th>
-                  <th className="px-6 py-3 text-center text-sm font-semibold text-gray-700 dark:text-white">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y dark:divide-slate-600">
-                {filteredTransactions.map((transaction) => (
-                  <tr key={transaction.id} className="hover:bg-gray-50 dark:hover:bg-slate-700 dark:bg-slate-800">
-                    <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{transaction.description}</td>
-                    <td className={`px-6 py-4 text-sm font-semibold ${getTypeColor(transaction.type)}`}>
-                      <span className="mr-1">{getTypeIcon(transaction.type)}</span>
-                      {transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1)}
-                    </td>
-                    <td className={`px-6 py-4 text-sm font-semibold text-right ${getTypeColor(transaction.type)}`}>
-                      {transaction.type === 'credit' ? '+' : '-'}₹{transaction.amount.toFixed(2)}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-center">
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusBadge(transaction.status)}`}>
-                        {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
-                      {new Date(transaction.timestamp).toLocaleDateString()} {new Date(transaction.timestamp).toLocaleTimeString()}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-center">
-                      <button
-                        onClick={() => handleDelete(transaction.id)}
-                        className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 font-medium"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+      <Card>
+        <CardContent className="p-0">
+          {loading ? (
+            <div className="p-6 space-y-3">
+              {[...Array(5)].map((_, i) => (
+                <TransactionSkeleton key={i} />
+              ))}
+            </div>
+          ) : filteredTransactions.length === 0 ? (
+            <div className="p-12">
+              {hasActiveFilters || transactions.length > 0 ? (
+                <NoResultsEmptyState onReset={clearFilters} />
+              ) : (
+                <TransactionsEmptyState />
+              )}
+            </div>
+          ) : (
+            <div className="divide-y divide-border">
+              {filteredTransactions.map((transaction) => {
+                const typeConfig = getTypeConfig(transaction.type);
+                const isFailed = transaction.status === 'failed';
 
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
+                return (
+                  <div
+                    key={transaction.id}
+                    className={`p-4 md:p-6 hover:bg-surface-elevated transition-colors duration-fast ${
+                      isFailed ? 'bg-error/5' : ''
+                    }`}
+                  >
+                    <div className="flex flex-col md:flex-row md:items-center gap-4">
+                      {/* Icon */}
+                      <div
+                        className={`p-3 rounded-xl border ${typeConfig.bg} ${typeConfig.border}`}
+                      >
+                        <Icon name={typeConfig.icon} size="md" className={typeConfig.color} />
+                      </div>
+
+                      {/* Details */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-4">
+                          <div>
+                            <p className="font-semibold text-text-primary">{transaction.description}</p>
+                            <div className="flex flex-wrap items-center gap-2 mt-1">
+                              <p className="text-sm text-text-muted">
+                                {formatDate(transaction.timestamp, { includeTime: true })}
+                              </p>
+                              <span className="text-text-muted">•</span>
+                              <TypeBadge type={transaction.type} />
+                            </div>
+                            {isFailed && transaction.reason && (
+                              <p className="text-red-400 text-sm mt-1 flex items-center gap-1">
+                                <Icon name="alert-circle" size="sm" />
+                                {transaction.reason}
+                              </p>
+                            )}
+                          </div>
+
+                          {/* Amount & Actions */}
+                          <div className="flex items-center gap-4">
+                            <div className="text-right">
+                              <p
+                                className={`font-mono text-lg font-semibold ${
+                                  transaction.type === 'credit'
+                                    ? 'text-emerald-400'
+                                    : transaction.type === 'fee'
+                                    ? 'text-amber-400'
+                                    : 'text-text-primary'
+                                }`}
+                              >
+                                {transaction.type === 'credit' ? '+' : '-'}
+                                {formatCurrency(transaction.amount)}
+                              </p>
+                              <StatusBadge status={transaction.status} />
+                            </div>
+
+                            {/* Actions */}
+                            <div className="flex items-center gap-2">
+                              {isFailed && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleRetry(transaction.id)}
+                                  title="Retry transaction"
+                                >
+                                  <Icon name="refresh-cw" size="sm" />
+                                </Button>
+                              )}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setDeleteConfirm(transaction)}
+                                title="Delete transaction"
+                              >
+                                <Icon name="trash-2" size="sm" className="text-red-400" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={!!deleteConfirm}
+        onClose={() => setDeleteConfirm(null)}
+        title="Delete Transaction"
+        size="sm"
+      >
+        <div className="space-y-6">
+          <div className="p-4 bg-error/10 border border-error/20 rounded-xl">
+            <p className="text-text-primary">
+              Are you sure you want to delete this transaction?
+            </p>
+            <p className="text-sm text-text-secondary mt-2">
+              {deleteConfirm?.description} — {formatCurrency(deleteConfirm?.amount)}
+            </p>
+          </div>
+
+          <div className="flex gap-3 justify-end">
+            <Button
+              variant="secondary"
+              onClick={() => setDeleteConfirm(null)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="danger"
+              onClick={() => handleDelete(deleteConfirm.id)}
+            >
+              Delete
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
+  );
+}
+
+/**
+ * Transaction History wrapper with Toast Provider
+ */
+export function TransactionHistory() {
+  return (
+    <ToastProvider>
+      <TransactionHistoryContent />
+    </ToastProvider>
   );
 }

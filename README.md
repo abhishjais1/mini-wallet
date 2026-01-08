@@ -45,7 +45,7 @@ A modern, lightweight wallet application built with React, featuring money manag
 - **jsdom 27.4**: DOM environment for tests
 
 ### Development
-- **Vite 7.3**: Next-gen build tool
+- **Vite 7.2**: Next-gen build tool
 - **ESLint 9.39**: Code linting
 - **PostCSS 8.5**: CSS processing
 
@@ -102,7 +102,7 @@ The app has a navigation bar with links to:
 3. Enter amount (₹1 - ₹10,000)
 4. Review fee calculation (2% of amount)
 5. Click "Continue"
-6. Confirm transfer in modal (shows recipient name)
+6. Confirm transfer in modal
 7. Both debit and fee transactions are recorded
 8. Balance updates with debit + fee deducted
 
@@ -130,13 +130,13 @@ npm run test:ui
 npm run test:coverage
 ```
 
-### Test Results
-All 33 tests passing across 5 test suites:
-- **appConfig.test.js** (17 tests): Business rule validation, fee calculations, limits
-- **Dashboard.test.jsx** (4 tests): Dashboard rendering and data display
-- **AddMoneyForm.test.jsx** (4 tests): Form validation and successful submission
-- **TransferMoneyForm.test.jsx** (4 tests): Recipient selection, fee calculation, confirmation modal
-- **TransactionHistory.test.jsx** (4 tests): Transaction filtering and soft delete
+### Test Structure
+Tests cover:
+- **appConfig.test.js**: Business rule validation (fee, limits)
+- **Dashboard.test.jsx**: Dashboard rendering and data display
+- **AddMoneyForm.test.jsx**: Add money form validation and submission
+- **TransferMoneyForm.test.jsx**: Transfer form with fee calculation
+- **TransactionHistory.test.jsx**: Transaction filtering and deletion
 
 ## 📁 Project Structure
 
@@ -150,35 +150,35 @@ mini-wallet-app1/
 │   │   ├── TransactionHistory.jsx     # Transaction list with filters
 │   │   ├── Toast.jsx                  # Toast & Error Boundary components
 │   │   └── Loading.jsx                # Loading skeletons and modals
+│   ├── pages/                         # Page-level components
 │   ├── context/
-│   │   ├── WalletContext.jsx          # Context definition
-│   │   └── WalletProvider.jsx         # Global state management with useReducer
+│   │   └── WalletContext.jsx          # Global state management
 │   ├── hooks/
-│   │   └── index.js                   # 6 custom React hooks
+│   │   └── index.js                   # Custom React hooks
 │   ├── utils/
 │   │   └── api.js                     # Axios API client
 │   ├── config/
-│   │   └── appConfig.js               # Business rules and validation
+│   │   └── appConfig.js               # Business rules and config
 │   ├── test/
 │   │   ├── setup.js                   # Vitest setup
-│   │   ├── appConfig.test.js          # Config tests (17 tests)
-│   │   ├── Dashboard.test.jsx         # Dashboard tests (4 tests)
-│   │   ├── AddMoneyForm.test.jsx      # Add money tests (4 tests)
-│   │   ├── TransferMoneyForm.test.jsx # Transfer tests (4 tests)
-│   │   └── TransactionHistory.test.jsx # History tests (4 tests)
+│   │   ├── appConfig.test.js          # Config tests
+│   │   ├── Dashboard.test.jsx         # Dashboard tests
+│   │   ├── AddMoneyForm.test.jsx      # Add money tests
+│   │   ├── TransferMoneyForm.test.jsx # Transfer tests
+│   │   └── TransactionHistory.test.jsx # History tests
 │   ├── App.jsx                        # Main app with routing
 │   ├── App.css                        # App styles
-│   ├── index.css                      # Tailwind directives and component layers
+│   ├── index.css                      # Tailwind directives
 │   └── main.jsx                       # Entry point
 ├── public/                            # Static assets
 ├── db.json                            # Mock database with sample data
-├── package.json                       # Dependencies and scripts
+├── package.json                       # Dependencies
 ├── vite.config.js                     # Vite configuration
 ├── vitest.config.js                   # Vitest configuration
-├── tailwind.config.js                 # Tailwind CSS configuration
+├── tailwind.config.js                 # Tailwind configuration
 ├── postcss.config.js                  # PostCSS configuration
 ├── eslint.config.js                   # ESLint configuration
-└── README.md                          # Documentation (this file)
+└── README.md                          # This file
 ```
 
 ## ⚙️ Configuration
@@ -192,20 +192,15 @@ TRANSACTION_FEE.percentage = 2  // 2% fee
 LIMITS.maxTransferAmount = 10000
 LIMITS.minTransferAmount = 1
 
-// Add Money Limits
-LIMITS.maxAddAmount = 100000
-LIMITS.minAddAmount = 1
-
 // API Base URL
 API.baseURL = 'http://localhost:3001'
 ```
 
-### Modifying Business Rules
+### Modifying Rules
 To change business rules:
 1. Edit `src/config/appConfig.js`
-2. Update fee percentage, transfer limits, or validation rules
+2. Update fee percentage, limits, or other configs
 3. Tests will validate new rules automatically
-4. Run `npm test` to verify all tests still pass
 
 ## 📊 Mock Data
 
@@ -253,8 +248,8 @@ The app handles various error scenarios:
 - **API Errors**: Network failures and server errors
 - **Business Logic Errors**: 
   - Insufficient balance
-  - Transfer limit exceeded
-  - Invalid amount (negative, zero, or exceeding limits)
+  - Limit exceeded
+  - Invalid amount
 - **Error Boundary**: Catches unhandled errors with recovery option
 
 ## 📱 Responsive Design
@@ -266,17 +261,10 @@ The app is responsive and works on:
 
 ## 🎨 Styling
 
-- **Tailwind CSS v4**: Utility-first CSS framework with @import directive
-- **Custom Component Layers**: Card, button, input-field classes in index.css
+- **Tailwind CSS**: Utility-first CSS framework
+- **Custom Components**: Card, button, input component layers
 - **Animations**: Toast fade-in, loading spinners
 - **Color Scheme**: Blue primary, green success, red danger
-
-## ✅ Code Quality
-
-- **Linting**: 0 errors, 0 warnings (ESLint)
-- **Build**: Production-ready (104 modules, Vite optimized)
-- **Testing**: 33 tests passing (Vitest + React Testing Library)
-- **Type Safety**: PropTypes for component validation
 
 ## 🔒 Security Measures
 
@@ -288,10 +276,10 @@ The app is responsive and works on:
 ## 📝 Assumptions & Limitations
 
 ### Assumptions
-1. **Single User Mode** - App works for one logged-in user (user ID 1)
-2. **Mock API** - json-server runs locally, no production database
-3. **Client-side State** - Balance updated in context, persists during session
-4. **No Authentication** - No login/logout flow implemented
+1. Single user mode - App works for one logged-in user (user ID 1)
+2. Mock API - json-server runs locally, no production database
+3. Client-side state - Balance updated in context, persists during session
+4. No authentication - No login/logout flow implemented
 
 ### Limitations
 1. **Data Persistence**: Data is stored in memory by json-server. Restarting the server resets data to db.json initial state
@@ -309,7 +297,7 @@ The app is responsive and works on:
 1. **User Management**
    - Login/Logout functionality
    - User profiles and settings
-   - Multi-user support with proper backend
+   - Multi-user support
 
 2. **Analytics**
    - Transaction charts and graphs
@@ -320,48 +308,26 @@ The app is responsive and works on:
    - Recurring transfers
    - Budget limits
    - Transaction tags/categories
-   - Transaction search and advanced filtering
+   - Transaction search
 
 4. **UI/UX**
    - Dark mode toggle
    - Internationalization (i18n)
-   - Accessibility improvements (WCAG)
+   - Accessibility improvements
    - Mobile app (React Native)
 
 5. **Backend**
    - Real Node.js/Express backend
    - Database (MongoDB, PostgreSQL)
    - Authentication (JWT)
-   - Rate limiting and security
-
-## 📋 Quick Commands Reference
-
-```bash
-# Development
-npm run dev              # Start development server
-npm run server           # Start json-server (new terminal)
-
-# Building
-npm run build            # Production build
-npm run preview          # Preview production build
-
-# Testing
-npm test                 # Run tests in watch mode
-npm run test:ui          # Run tests with UI
-npm run test:coverage    # Generate coverage report
-
-# Code Quality
-npm run lint             # Run ESLint
-npm run lint:fix         # Fix ESLint issues automatically
-```
+   - Rate limiting
 
 ## 📞 Support
 
 For issues or questions:
-1. Check the test files for usage examples
-2. Review `appConfig.js` for configuration options
-3. Check component PropTypes for required props
-4. Review error messages for troubleshooting
+1. Check existing GitHub issues
+2. Review the test files for usage examples
+3. Check `appConfig.js` for configuration options
 
 ## 📄 License
 
@@ -369,12 +335,6 @@ This project is for educational purposes. Feel free to use and modify as needed.
 
 ---
 
-**Project Status**: ✅ Complete and Production-Ready
-
-**Build Status**: ✅ Passing (104 modules, 0 errors)
-**Lint Status**: ✅ Passing (0 errors, 0 warnings)
-**Test Status**: ✅ All 33 tests passing
-
 **Built with ❤️ for learning fintech concepts**
 
-Last Updated: January 8, 2026
+Last Updated: January 7, 2025

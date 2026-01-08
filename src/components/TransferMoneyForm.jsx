@@ -1,20 +1,32 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { Link, useNavigate } from 'react-router-dom';
 import { useWallet } from '../hooks/index.js';
 import { calculateFee, validateTransferAmount } from '../config/appConfig.js';
-import { Toast } from './Toast.jsx';
-import { LoadingSpinner, Modal } from './Loading.jsx';
+import { formatCurrency, formatDate } from '../utils/formatters.js';
+import { Card, CardHeader, CardTitle, CardContent } from './ui/Card.jsx';
+import { Button } from './ui/Button.jsx';
+import { Input } from './ui/Input.jsx';
+import { Select, SelectOption } from './ui/Select.jsx';
+import { Icon, IconContainer } from './ui/Icon.jsx';
+import { Modal, ConfirmModal } from './ui/Modal.jsx';
+import { ToastProvider, useToast } from './ui/Toast.jsx';
 
-export function TransferMoneyForm() {
+/**
+ * Transfer Money Form Component
+ */
+function TransferMoneyFormContent() {
   const { register, handleSubmit, reset, watch, formState: { errors } } = useForm();
   const { transferMoney, loading, balance, users, currentUser } = useWallet();
-  const [toast, setToast] = useState(null);
+  const { addToast } = useToast();
+  const navigate = useNavigate();
+
   const [confirmation, setConfirmation] = useState(null);
 
   // Filter out current user from recipients list
-  const availableRecipients = users.filter(user => user.id !== currentUser?.id);
+  const availableRecipients = users.filter((user) => user.id !== currentUser?.id);
 
-  // eslint-disable-next-line react-hooks/incompatible-library
+  // Watch amount for real-time fee calculation
   const amount = watch('amount');
   const fee = amount ? calculateFee(Number(amount)) : 0;
   const total = amount ? Number(amount) + fee : 0;
@@ -23,12 +35,14 @@ export function TransferMoneyForm() {
     const validation = validateTransferAmount(Number(data.amount), balance);
 
     if (!validation.isValid) {
-      setToast({ type: 'error', message: validation.message });
+      addToast(validation.message, 'error');
       return;
     }
 
+    // Show confirmation modal
     setConfirmation({
       recipientId: data.recipient,
+      recipientName: users.find((u) => u.id === data.recipient)?.name || `User ${data.recipient}`,
       amount: Number(data.amount),
       fee,
       total,
@@ -37,161 +51,211 @@ export function TransferMoneyForm() {
 
   const handleConfirm = async () => {
     if (!confirmation) return;
-    try {
-      const result = await transferMoney(confirmation.recipientId, confirmation.amount, confirmation.fee);
-      if (result.success) {
-        setToast({ type: 'success', message: result.message });
-        reset();
-        setConfirmation(null);
-      } else {
-        setToast({ type: 'error', message: result.message });
-        setConfirmation(null);
-      }
-    } catch (err) {
-      setToast({ type: 'error', message: err.message || 'Transfer failed' });
+
+    const result = await transferMoney(confirmation.recipientId, confirmation.amount, confirmation.fee);
+
+    if (result.success) {
+      addToast(result.message, result.isPending ? 'info' : 'success');
+      reset();
+      setConfirmation(null);
+      // Navigate to dashboard
+      setTimeout(() => navigate('/'), 1500);
+    } else {
+      addToast(result.message, 'error');
       setConfirmation(null);
     }
   };
 
   return (
     <>
-      <div className="card dark:bg-slate-800 max-w-md mx-auto">
-        <h2 className="text-2xl font-bold mb-6 dark:text-white">Transfer Money</h2>
-
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div>
-            <label
-                htmlFor="recipient"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >
-                Recipient
-                </label>
-
-                <select
-                    id="recipient"
-                    className="input-field"
-                    {...register('recipient', { required: 'Please select a recipient' })}
-                    disabled={loading || availableRecipients.length === 0}
-                    >
-                    <option value="">-- Select recipient --</option>
-                    {availableRecipients.map((user) => (
-                      <option key={user.id} value={user.id}>
-                        {user.name}
-                      </option>
-                    ))}
-                </select>
-            {errors.recipient && <span className="error-text">{errors.recipient.message}</span>}
+      <div className="max-w mx-auto animate-slideUp">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="inline-flex p-4 bg-accent-tertiary/10 border border-accent-tertiary/20 rounded-2xl mb-4">
+            <Icon name="send" size="2xl" className="text-accent-tertiary" />
           </div>
+          <h1 className="text-2xl md:text-3xl font-bold font-heading text-text-primary mb-2">
+            Transfer Money
+          </h1>
+          <p className="text-text-secondary">
+            Available balance: <span className="font-mono text-accent-secondary">{formatCurrency(balance)}</span>
+          </p>
+        </div>
 
-          <div>
-            <label
-                htmlFor="transferAmount"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+        {/* Form Card */}
+        <Card>
+          <CardContent className="p-6 md:p-8">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+              {/* Recipient Select */}
+              <div>
+                <Select
+                  id="recipient"
+                  label="Select Recipient"
+                  {...register('recipient', { required: 'Please select a recipient' })}
+                  disabled={loading || availableRecipients.length === 0}
+                  error={!!errors.recipient}
                 >
-                Amount (₹)
-                </label>
+                  <option value="">-- Select recipient --</option>
+                  {availableRecipients.map((user) => (
+                    <option key={user.id} value={user.id}>
+                      {user.name} (ID: {user.id})
+                    </option>
+                  ))}
+                </Select>
+                {errors.recipient && (
+                  <p className="text-red-400 text-sm mt-2 flex items-center gap-1">
+                    <Icon name="alert-circle" size="sm" />
+                    {errors.recipient.message}
+                  </p>
+                )}
+              </div>
 
-                <input
-                id="transferAmount"
-                type="number"
-                step="0.01"
-                placeholder="Enter amount"
-                className="input-field"
-                {...register('amount', {
+              {/* Amount Input */}
+              <div>
+                <Input
+                  id="amount"
+                  type="number"
+                  label="Enter Amount"
+                  placeholder="0.00"
+                  step="0.01"
+                  min={1}
+                  max={10000}
+                  error={!!errors.amount}
+                  {...register('amount', {
                     required: 'Amount is required',
                     min: { value: 0.01, message: 'Amount must be greater than 0' },
-                })}
-                disabled={loading}
+                    max: { value: 10000, message: 'Maximum transfer limit is ₹10,000' },
+                  })}
+                  disabled={loading}
                 />
+                {errors.amount && (
+                  <p className="text-red-400 text-sm mt-2 flex items-center gap-1">
+                    <Icon name="alert-circle" size="sm" />
+                    {errors.amount.message}
+                  </p>
+                )}
+              </div>
 
-            {errors.amount && <span className="error-text">{errors.amount.message}</span>}
-          </div>
+              {/* Fee Breakdown */}
+              {amount && Number(amount) > 0 && (
+                <div className="p-4 bg-surface-elevated border border-border rounded-xl space-y-3">
+                  <p className="text-sm font-medium text-text-primary">Transaction Summary</p>
 
-          {amount && (
-            <div className="bg-blue-50 dark:bg-slate-700 p-4 rounded-lg space-y-2 border border-blue-200 dark:border-slate-600">
-              <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
-                <span>Amount:</span>
-                <span>₹{Number(amount).toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
-                <span>Transaction Fee (2%):</span>
-                <span>₹{fee.toFixed(2)}</span>
-              </div>
-              <div className="border-t border-blue-200 dark:border-slate-600 pt-2 flex justify-between font-semibold text-gray-800 dark:text-white">
-                <span>Total:</span>
-                <span>₹{total.toFixed(2)}</span>
-              </div>
-              {total > balance && (
-                <div className="text-red-600 dark:text-red-400 text-sm">
-                  Insufficient balance! Available: ₹{balance.toFixed(2)}
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-text-secondary">Amount:</span>
+                      <span className="font-mono text-text-primary">{formatCurrency(Number(amount))}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-text-secondary">Transaction Fee (2%):</span>
+                      <span className="font-mono text-amber-400">{formatCurrency(fee)}</span>
+                    </div>
+                    <div className="border-t border-border pt-2 flex justify-between">
+                      <span className="text-sm font-medium text-text-primary">Total:</span>
+                      <span className="font-mono text-lg font-bold text-accent-secondary">{formatCurrency(total)}</span>
+                    </div>
+                  </div>
+
+                  {/* Balance Warning */}
+                  {total > balance && (
+                    <div className="flex items-start gap-2 p-3 bg-error/10 border border-error/20 rounded-lg">
+                      <Icon name="alert-triangle" size="sm" className="text-red-400 flex-shrink-0 mt-0.5" />
+                      <p className="text-red-400 text-sm">
+                        Insufficient balance. Available: {formatCurrency(balance)}, Required: {formatCurrency(total)}
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
+
+              {/* Submit Button */}
+              <Button
+                type="submit"
+                variant="primary"
+                className="w-full"
+                isLoading={loading}
+                disabled={loading || !amount || Number(amount) <= 0}
+              >
+                Review Transfer
+              </Button>
+            </form>
+
+            {/* Back Link */}
+            <div className="mt-6 text-center">
+              <Link to="/" className="text-accent-secondary hover:text-accent-primary text-sm font-medium inline-flex items-center gap-1 transition-colors">
+                <Icon name="arrow-left" size="sm" />
+                Back to Dashboard
+              </Link>
             </div>
-          )}
-
-          <button
-            type="submit"
-            className="btn-primary w-full"
-            >
-            Continue
-            </button>
-
-
-        </form>
-
-        {toast && (
-          <Toast
-            message={toast.message}
-            type={toast.type}
-            onClose={() => setToast(null)}
-          />
-        )}
+          </CardContent>
+        </Card>
       </div>
 
+      {/* Confirmation Modal */}
       <Modal
         isOpen={!!confirmation}
         onClose={() => setConfirmation(null)}
         title="Confirm Transfer"
+        size="sm"
       >
-        <div className="space-y-4">
-          <div className="bg-gray-50 p-4 rounded-lg space-y-2">
-            <div className="flex justify-between">
-              <span className="text-gray-600">To User:</span>
-              <span className="font-semibold">{users?.find(u => u.id === confirmation?.recipientId)?.name || `User ${confirmation?.recipientId}`}</span>
+        <div className="space-y-6">
+          <div className="p-4 bg-surface-elevated border border-border rounded-xl space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-text-secondary text-sm">To:</span>
+              <span className="font-medium text-text-primary">{confirmation?.recipientName}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Amount:</span>
-              <span className="font-semibold">₹{confirmation?.amount.toFixed(2)}</span>
+            <div className="flex justify-between items-center">
+              <span className="text-text-secondary text-sm">Amount:</span>
+              <span className="font-mono text-text-primary">{formatCurrency(confirmation?.amount)}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Fee (2%):</span>
-              <span className="font-semibold">₹{confirmation?.fee.toFixed(2)}</span>
+            <div className="flex justify-between items-center">
+              <span className="text-text-secondary text-sm">Transaction Fee:</span>
+              <span className="font-mono text-amber-400">{formatCurrency(confirmation?.fee)}</span>
             </div>
-            <div className="border-t pt-2 flex justify-between text-lg font-bold">
-              <span>Total:</span>
-              <span>₹{confirmation?.total.toFixed(2)}</span>
+            <div className="border-t border-border pt-3 flex justify-between items-center">
+              <span className="text-sm font-medium text-text-primary">Total to be debited:</span>
+              <span className="font-mono text-lg font-bold text-accent-secondary">{formatCurrency(confirmation?.total)}</span>
             </div>
           </div>
 
+          {/* Fee Info */}
+          <div className="flex items-start gap-2 text-sm text-text-secondary">
+            <Icon name="info" size="sm" className="flex-shrink-0 mt-0.5" />
+            <p>Transactions are processed instantly. A 2% fee applies to all transfers.</p>
+          </div>
+
           <div className="flex gap-3">
-            <button
-              className="btn-secondary flex-1"
+            <Button
+              variant="secondary"
+              className="flex-1"
               onClick={() => setConfirmation(null)}
               disabled={loading}
             >
               Cancel
-            </button>
-            <button
-              className="btn-primary flex-1 flex items-center justify-center gap-2"
+            </Button>
+            <Button
+              variant="primary"
+              className="flex-1"
               onClick={handleConfirm}
+              isLoading={loading}
               disabled={loading}
             >
-              {loading && <LoadingSpinner size="sm" />}
-              {loading ? 'Processing...' : 'Confirm Transfer'}
-            </button>
+              Confirm Transfer
+            </Button>
           </div>
         </div>
       </Modal>
     </>
+  );
+}
+
+/**
+ * Transfer Money Form wrapper with Toast Provider
+ */
+export function TransferMoneyForm() {
+  return (
+    <ToastProvider>
+      <TransferMoneyFormContent />
+    </ToastProvider>
   );
 }

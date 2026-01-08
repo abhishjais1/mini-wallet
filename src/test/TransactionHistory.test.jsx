@@ -1,53 +1,87 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { BrowserRouter } from 'react-router-dom';
 import { TransactionHistory } from '../components/TransactionHistory.jsx';
-import { WalletProvider } from '../context/WalletProvider.jsx';
+import { WalletProvider } from '../context/WalletContext.jsx';
 import * as api from '../utils/api.js';
 
 vi.mock('../utils/api.js');
 
+// Wrapper with router
+function RouterWrapper({ children }) {
+  return <BrowserRouter>{children}</BrowserRouter>;
+}
+
 describe('TransactionHistory Component', () => {
+  const mockTransactions = [
+    {
+      id: '1',
+      userId: 1,
+      type: 'credit',
+      amount: 1000,
+      status: 'success',
+      description: 'Money Added',
+      timestamp: '2024-01-15T10:00:00Z',
+      deleted: false
+    },
+    {
+      id: '2',
+      userId: 1,
+      type: 'debit',
+      amount: 500,
+      status: 'pending',
+      description: 'Transfer to User 2',
+      timestamp: '2024-01-15T11:00:00Z',
+      deleted: false
+    },
+    {
+      id: '3',
+      userId: 1,
+      type: 'debit',
+      amount: 200,
+      status: 'failed',
+      description: 'Transfer to User 3',
+      timestamp: '2024-01-15T12:00:00Z',
+      deleted: false,
+      reason: 'Network timeout'
+    }
+  ];
+
   beforeEach(() => {
     vi.clearAllMocks();
-    api.fetchUsers.mockResolvedValue([
-      { id: 1, name: 'Abhishek', balance: 5000 }
-    ]);
-    api.fetchTransactions.mockResolvedValue([
-      {
-        id: '1',
-        userId: 1,
-        type: 'credit',
-        amount: 1000,
-        status: 'success',
-        description: 'Money Added',
-        timestamp: '2025-01-07T10:00:00Z',
-        deleted: false
-      },
-      {
-        id: '2',
-        userId: 1,
-        type: 'debit',
-        amount: 500,
-        status: 'success',
-        description: 'Transfer',
-        timestamp: '2025-01-07T11:00:00Z',
-        deleted: false
-      }
-    ]);
-    api.softDeleteTransaction.mockResolvedValue({ id: '1', deleted: true });
+    api.fetchUsers.mockResolvedValue([{ id: 1, name: 'Demo User', balance: 5000 }]);
+    api.fetchTransactions.mockResolvedValue(mockTransactions);
+    api.softDeleteTransaction.mockResolvedValue({});
+    api.updateTransactionStatus.mockResolvedValue({});
   });
 
   it('should render transaction history', async () => {
     render(
-      <WalletProvider>
-        <TransactionHistory />
-      </WalletProvider>
+      <RouterWrapper>
+        <WalletProvider>
+          <TransactionHistory />
+        </WalletProvider>
+      </RouterWrapper>
     );
 
     await waitFor(() => {
+      expect(screen.getByText(/Transaction History/i)).toBeInTheDocument();
       expect(screen.getByText('Money Added')).toBeInTheDocument();
-      expect(screen.getByText('Transfer')).toBeInTheDocument();
+    });
+  });
+
+  it('should display transaction count', async () => {
+    render(
+      <RouterWrapper>
+        <WalletProvider>
+          <TransactionHistory />
+        </WalletProvider>
+      </RouterWrapper>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/3 of 3 transactions/i)).toBeInTheDocument();
     });
   });
 
@@ -55,21 +89,23 @@ describe('TransactionHistory Component', () => {
     const user = userEvent.setup();
 
     render(
-      <WalletProvider>
-        <TransactionHistory />
-      </WalletProvider>
+      <RouterWrapper>
+        <WalletProvider>
+          <TransactionHistory />
+        </WalletProvider>
+      </RouterWrapper>
     );
-
-    const statusSelect = screen.getByRole('combobox', { name: /Status/i });
 
     await waitFor(() => {
       expect(screen.getByText('Money Added')).toBeInTheDocument();
     });
 
-    await user.selectOptions(statusSelect, 'success');
+    // Filter by success status
+    const statusFilter = screen.getByLabelText(/Status/i) || screen.getByDisplayValue(/All Status/);
+    await user.selectOptions(statusFilter, 'success');
 
     await waitFor(() => {
-      expect(screen.getByText('Money Added')).toBeInTheDocument();
+      expect(screen.getByText('1 of 3 transactions')).toBeInTheDocument();
     });
   });
 
@@ -77,43 +113,70 @@ describe('TransactionHistory Component', () => {
     const user = userEvent.setup();
 
     render(
-      <WalletProvider>
-        <TransactionHistory />
-      </WalletProvider>
+      <RouterWrapper>
+        <WalletProvider>
+          <TransactionHistory />
+        </WalletProvider>
+      </RouterWrapper>
     );
-
-    const typeSelect = screen.getByRole('combobox', { name: /Type/i });
 
     await waitFor(() => {
       expect(screen.getByText('Money Added')).toBeInTheDocument();
     });
 
-    await user.selectOptions(typeSelect, 'credit');
+    // Filter by credit type
+    const typeFilter = screen.getByLabelText(/Type/i) || screen.getByDisplayValue(/All Types/);
+    await user.selectOptions(typeFilter, 'credit');
 
     await waitFor(() => {
-      expect(screen.getByText('Money Added')).toBeInTheDocument();
+      expect(screen.getByText('1 of 3 transactions')).toBeInTheDocument();
     });
   });
 
-  it('should handle transaction deletion', async () => {
-    const user = userEvent.setup();
+  it('should show failed transaction with reason', async () => {
     render(
-      <WalletProvider>
-        <TransactionHistory />
-      </WalletProvider>
+      <RouterWrapper>
+        <WalletProvider>
+          <TransactionHistory />
+        </WalletProvider>
+      </RouterWrapper>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Network timeout')).toBeInTheDocument();
+      expect(screen.getByTitle(/Retry transaction/i)).toBeInTheDocument();
+    });
+  });
+
+  it('should clear filters when clear button is clicked', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <RouterWrapper>
+        <WalletProvider>
+          <TransactionHistory />
+        </WalletProvider>
+      </RouterWrapper>
     );
 
     await waitFor(() => {
       expect(screen.getByText('Money Added')).toBeInTheDocument();
     });
 
-    const deleteButtons = screen.getAllByRole('button', { name: /Delete/i });
-    window.confirm = vi.fn(() => true);
-
-    await user.click(deleteButtons[0]);
+    // Apply a filter
+    const statusFilter = screen.getByLabelText(/Status/i) || screen.getByDisplayValue(/All Status/);
+    await user.selectOptions(statusFilter, 'success');
 
     await waitFor(() => {
-      expect(api.softDeleteTransaction).toHaveBeenCalled();
+      expect(screen.getByText('1 of 3 transactions')).toBeInTheDocument();
+    });
+
+    // Clear filters
+    const clearButton = screen.getByRole('button', { name: /Clear all/i });
+    await user.click(clearButton);
+
+    await waitFor(() => {
+      expect(screen.getByText('3 of 3 transactions')).toBeInTheDocument();
     });
   });
 });

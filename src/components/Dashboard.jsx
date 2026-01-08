@@ -1,140 +1,255 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useWallet } from '../hooks/index.js';
-import { LoadingSpinner, SkeletonCard, EmptyState } from './Loading.jsx';
+import { formatCurrency, formatRelativeTime, getTransactionIcon } from '../utils/formatters.js';
+import { Card, CardHeader, CardTitle, CardContent } from './ui/Card.jsx';
+import { Button } from './ui/Button.jsx';
+import { Badge, StatusBadge } from './ui/Badge.jsx';
+import { Icon, IconContainer } from './ui/Icon.jsx';
+import { Skeleton, TransactionSkeleton, Spinner } from './ui/Skeleton.jsx';
+import { EmptyState } from './ui/EmptyState.jsx';
 
+/**
+ * Dashboard component - main wallet overview
+ */
 export function Dashboard() {
   const { currentUser, loading, balance, transactions } = useWallet();
 
-  const activeTransactions = transactions.filter((t) => !t.deleted).slice(0, 10);
+  // Get last 10 non-deleted transactions
+  const recentTransactions = transactions
+    .filter((t) => !t.deleted)
+    .slice(0, 10)
+    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
-  const getTypeIcon = (type) => {
-    switch (type) {
-      case 'credit':
-        return '📥';
-      case 'debit':
-        return '📤';
-      case 'fee':
-        return '💰';
-      default:
-        return '•';
-    }
-  };
-
-  const getTypeColor = (type) => {
-    switch (type) {
-      case 'credit':
-        return 'text-green-600';
-      case 'debit':
-        return 'text-red-600';
-      case 'fee':
-        return 'text-yellow-600';
-      default:
-        return 'text-gray-600';
-    }
-  };
+  // Stats calculations
+  const totalTransactions = transactions.filter((t) => !t.deleted).length;
+  const pendingTransactions = transactions.filter(
+    (t) => !t.deleted && t.status === 'pending'
+  ).length;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-slideUp">
       {/* Header */}
-      <div>
-        <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">💰 Welcome, {currentUser?.name || 'User'}!</h1>
-        <p className="text-gray-600 dark:text-gray-400 text-lg">Manage your wallet and track transactions</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl md:text-4xl font-bold font-heading text-text-primary mb-1">
+            Welcome back, {currentUser?.name || 'User'}
+          </h1>
+          <p className="text-text-secondary">
+            Here's what's happening with your wallet
+          </p>
+        </div>
       </div>
 
       {/* Balance Card */}
       {loading ? (
-        <SkeletonCard />
-      ) : (
-        <div className="card dark:bg-gradient-to-r dark:from-blue-900 dark:to-indigo-900 bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg">
-          <p className="text-blue-100 mb-2">Total Balance</p>
-          <h2 className="text-5xl font-bold mb-4">₹{balance.toFixed(2)}</h2>
-          <div className="flex gap-4 pt-4 border-t border-blue-400 dark:border-blue-500">
-            <div>
-              <p className="text-blue-100 text-sm">User ID</p>
-              <p className="font-semibold">{currentUser?.id}</p>
+        <Card className="p-6">
+          <div className="flex items-center justify-between">
+            <div className="space-y-3 flex-1">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-10 w-48" />
             </div>
-            <div>
-              <p className="text-blue-100 text-sm">Total Transactions</p>
-              <p className="font-semibold">{transactions.filter((t) => !t.deleted).length}</p>
+            <div className="flex gap-8">
+              <Skeleton className="h-16 w-24" />
+              <Skeleton className="h-16 w-24" />
             </div>
           </div>
-        </div>
+        </Card>
+      ) : (
+        <Card className="bg-gradient-to-br from-indigo-500/20 via-purple-500/10 to-surface border-indigo-500/30 relative overflow-hidden">
+          {/* Background grid pattern */}
+          <div className="absolute inset-0 bg-grid-pattern opacity-30" />
+
+          <CardContent className="p-6 md:p-8 relative z-10">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+              <div className="flex-1 min-w-0">
+                <p className="text-indigo-300 text-xs font-semibold mb-3 uppercase tracking-widest">
+                  Total Balance
+                </p>
+                <h2 className="text-4xl md:text-6xl font-bold font-heading">
+                  <span className="text-white drop-shadow-[0_0_30px_rgba(255,255,255,0.3)]">
+                    {formatCurrency(balance)}
+                  </span>
+                </h2>
+                {pendingTransactions > 0 && (
+                  <p className="text-text-secondary text-sm mt-2 flex items-center gap-2">
+                    <Spinner size="sm" />
+                    {pendingTransactions} pending transaction{pendingTransactions > 1 ? 's' : ''}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex gap-6">
+                <div className="text-center md:text-right">
+                  <p className="text-text-secondary text-sm mb-1">User ID</p>
+                  <p className="font-mono text-text-primary font-medium">#{currentUser?.id}</p>
+                </div>
+                <div className="text-center md:text-right">
+                  <p className="text-text-secondary text-sm mb-1">Transactions</p>
+                  <p className="font-mono text-text-primary font-medium">{totalTransactions}</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <a
-          href="/add-money"
-          className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900 dark:to-teal-900 border border-emerald-200 dark:border-emerald-700 rounded-lg shadow-md p-6 hover:shadow-xl hover:shadow-emerald-200 dark:hover:shadow-emerald-900/50 transition-all duration-300 cursor-pointer transform hover:scale-105"
-        >
-          <div className="text-4xl mb-3">💳</div>
-          <h3 className="text-xl font-semibold text-emerald-900 dark:text-emerald-100 mb-2">Add Money</h3>
-          <p className="text-emerald-700 dark:text-emerald-300 text-sm">Deposit funds to your wallet</p>
-        </a>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+        <Link to="/add-money" className="group">
+          <Card className="h-full hover:border-accent-primary/30 hover:shadow-glow hover:-translate-y-1 transition-all duration-slow cursor-pointer">
+            <CardContent className="p-6">
+              <div className="flex items-start gap-4">
+                <IconContainer name="plus-circle" size="lg" variant="primary" />
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold font-heading text-text-primary mb-1 group-hover:text-accent-secondary transition-colors">
+                    Add Money
+                  </h3>
+                  <p className="text-text-secondary text-sm">
+                    Deposit funds to your wallet instantly
+                  </p>
+                </div>
+                <Icon name="chevron-right" className="text-text-muted group-hover:text-accent-secondary group-hover:translate-x-1 transition-all" />
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
 
-        <a
-          href="/transfer"
-          className="bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900 dark:to-indigo-900 border border-purple-200 dark:border-purple-700 rounded-lg shadow-md p-6 hover:shadow-xl hover:shadow-purple-200 dark:hover:shadow-purple-900/50 transition-all duration-300 cursor-pointer transform hover:scale-105"
-        >
-          <div className="text-4xl mb-3">💸</div>
-          <h3 className="text-xl font-semibold text-purple-900 dark:text-purple-100 mb-2">Transfer Money</h3>
-          <p className="text-purple-700 dark:text-purple-300 text-sm">Send money to another user</p>
-        </a>
+        <Link to="/transfer" className="group">
+          <Card className="h-full hover:border-accent-primary/30 hover:shadow-glow hover:-translate-y-1 transition-all duration-slow cursor-pointer">
+            <CardContent className="p-6">
+              <div className="flex items-start gap-4">
+                <IconContainer name="send" size="lg" variant="success" />
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold font-heading text-text-primary mb-1 group-hover:text-accent-secondary transition-colors">
+                    Transfer Money
+                  </h3>
+                  <p className="text-text-secondary text-sm">
+                    Send funds to other users securely
+                  </p>
+                </div>
+                <Icon name="chevron-right" className="text-text-muted group-hover:text-accent-secondary group-hover:translate-x-1 transition-all" />
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
       </div>
 
       {/* Recent Transactions */}
-      <div className="card dark:bg-slate-800 border border-gray-200 dark:border-slate-700 shadow-lg">
-        <h3 className="text-2xl font-bold mb-6 dark:text-white flex items-center gap-2">
-          <span className="text-2xl">📊</span> Recent Transactions
-        </h3>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between pb-4">
+          <CardTitle className="flex items-center gap-3">
+            <IconContainer name="clock-counter-clockwise" size="md" variant="default">
+              <Icon name="clock-counter-clockwise" size="sm" />
+            </IconContainer>
+            Recent Transactions
+          </CardTitle>
+          {recentTransactions.length > 0 && (
+            <Link to="/transactions">
+              <Button variant="link" size="sm">
+                View All
+                <Icon name="arrow-right" size="sm" className="ml-1" />
+              </Button>
+            </Link>
+          )}
+        </CardHeader>
 
-        {loading ? (
-          <div className="space-y-4">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-12 bg-gray-200 rounded animate-pulse"></div>
-            ))}
-          </div>
-        ) : activeTransactions.length === 0 ? (
-          <EmptyState
-            icon="📋"
-            title="No Transactions Yet"
-            description="Start by adding money to your wallet"
-          />
-        ) : (
-          <div className="space-y-3">
-            {activeTransactions.map((transaction) => (
-              <div key={transaction.id} className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-slate-700 dark:to-slate-600 rounded-lg hover:shadow-md dark:hover:shadow-slate-800 transition-all duration-200 border border-gray-200 dark:border-slate-600">
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">{getTypeIcon(transaction.type)}</span>
-                  <div>
-                    <p className="font-semibold text-gray-900 dark:text-white">{transaction.description}</p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      {new Date(transaction.timestamp).toLocaleDateString()}
-                    </p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className={`font-bold text-lg ${getTypeColor(transaction.type)}`}>
-                    {transaction.type === 'credit' ? '+' : '-'}₹{transaction.amount.toFixed(2)}
-                  </p>
-                  <span className="text-xs bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900 dark:to-emerald-900 text-green-800 dark:text-green-200 px-3 py-1 rounded-full font-semibold border border-green-300 dark:border-green-700">
-                    {transaction.status}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {activeTransactions.length > 0 && (
-          <a
-            href="/transactions"
-            className="mt-4 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-semibold"
-          >
-            View All Transactions →
-          </a>
-        )}
-      </div>
+        <CardContent className="pt-0">
+          {loading ? (
+            <div className="space-y-3">
+              {[...Array(3)].map((_, i) => (
+                <TransactionSkeleton key={i} />
+              ))}
+            </div>
+          ) : recentTransactions.length === 0 ? (
+            <EmptyState
+              icon="receipt"
+              title="No Transactions Yet"
+              description="Start by adding money to your wallet"
+              action={
+                <Link to="/add-money">
+                  <Button variant="primary">Add Money</Button>
+                </Link>
+              }
+            />
+          ) : (
+            <div className="space-y-2">
+              {recentTransactions.map((transaction, index) => (
+                <TransactionItem
+                  key={transaction.id}
+                  transaction={transaction}
+                  index={index}
+                />
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
+  );
+}
+
+/**
+ * Transaction item component
+ */
+function TransactionItem({ transaction, index }) {
+  const isCredit = transaction.type === 'credit';
+  const isPending = transaction.status === 'pending';
+  const isFailed = transaction.status === 'failed';
+
+  return (
+    <Link
+      to="/transactions"
+      className="flex items-center justify-between p-4 rounded-xl hover:bg-surface-elevated transition-all duration-fast group animate-slideUp"
+      style={{ animationDelay: `${index * 50}ms` }}
+    >
+      <div className="flex items-center gap-4 flex-1 min-w-0">
+        <div
+          className={`p-2.5 rounded-lg flex-shrink-0 ${
+            isCredit
+              ? 'bg-emerald-500/10 border border-emerald-500/20'
+              : isPending
+              ? 'bg-amber-500/10 border border-amber-500/20'
+              : isFailed
+              ? 'bg-red-500/10 border border-red-500/20'
+              : 'bg-surface-elevated border border-border'
+          }`}
+        >
+          <Icon
+            name={getTransactionIcon(transaction.type)}
+            size="md"
+            className={
+              isCredit
+                ? 'text-emerald-400'
+                : isPending
+                ? 'text-amber-400'
+                : isFailed
+                ? 'text-red-400'
+                : 'text-text-secondary'
+            }
+          />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="font-medium text-text-primary truncate">{transaction.description}</p>
+          <p className="text-sm text-text-muted">{formatRelativeTime(transaction.timestamp)}</p>
+        </div>
+      </div>
+
+      <div className="text-right flex-shrink-0 ml-4">
+        <p
+          className={`font-mono font-semibold ${
+            isCredit
+              ? 'text-emerald-400'
+              : transaction.type === 'fee'
+              ? 'text-amber-400'
+              : 'text-text-primary'
+          }`}
+        >
+          {isCredit ? '+' : '-'}
+          {formatCurrency(transaction.amount)}
+        </p>
+        <StatusBadge status={transaction.status} />
+      </div>
+    </Link>
   );
 }
