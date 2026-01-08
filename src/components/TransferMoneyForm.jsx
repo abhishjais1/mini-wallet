@@ -55,14 +55,14 @@ export function TransferMoneyForm() {
 
   return (
     <>
-      <div className="card max-w-md mx-auto">
-        <h2 className="text-2xl font-bold mb-6">Transfer Money</h2>
+      <div className="card dark:bg-slate-800 max-w-md mx-auto">
+        <h2 className="text-2xl font-bold mb-6 dark:text-white">Transfer Money</h2>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
             <label
                 htmlFor="recipient"
-                className="block text-sm font-medium text-gray-700 mb-2"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                 >
                 Recipient
                 </label>
@@ -76,7 +76,7 @@ export function TransferMoneyForm() {
                     <option value="">-- Select recipient --</option>
                     {availableRecipients.map((user) => (
                       <option key={user.id} value={user.id}>
-                        {user.name} (₹{user.balance})
+                        {user.name}
                       </option>
                     ))}
                 </select>
@@ -86,7 +86,7 @@ export function TransferMoneyForm() {
           <div>
             <label
                 htmlFor="transferAmount"
-                className="block text-sm font-medium text-gray-700 mb-2"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                 >
                 Amount (₹)
                 </label>
@@ -108,21 +108,21 @@ export function TransferMoneyForm() {
           </div>
 
           {amount && (
-            <div className="bg-blue-50 p-4 rounded-lg space-y-2">
-              <div className="flex justify-between text-sm">
+            <div className="bg-blue-50 dark:bg-slate-700 p-4 rounded-lg space-y-2 border border-blue-200 dark:border-slate-600">
+              <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
                 <span>Amount:</span>
                 <span>₹{Number(amount).toFixed(2)}</span>
               </div>
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-sm text-gray-700 dark:text-gray-300">
                 <span>Transaction Fee (2%):</span>
                 <span>₹{fee.toFixed(2)}</span>
               </div>
-              <div className="border-t pt-2 flex justify-between font-semibold">
+              <div className="border-t border-blue-200 dark:border-slate-600 pt-2 flex justify-between font-semibold text-gray-800 dark:text-white">
                 <span>Total:</span>
                 <span>₹{total.toFixed(2)}</span>
               </div>
               {total > balance && (
-                <div className="text-danger-600 text-sm">
+                <div className="text-red-600 dark:text-red-400 text-sm">
                   Insufficient balance! Available: ₹{balance.toFixed(2)}
                 </div>
               )}

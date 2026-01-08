@@ -15,9 +15,13 @@ export function TransactionHistory() {
       if (statusFilter !== 'all' && t.status !== statusFilter) return false;
       if (typeFilter !== 'all' && t.type !== typeFilter) return false;
       if (searchDate) {
-        const tDate = new Date(t.timestamp).toLocaleDateString();
-        const sDate = new Date(searchDate).toLocaleDateString();
-        if (tDate !== sDate) return false;
+        // Convert UTC timestamp to user's local date (YYYY-MM-DD format)
+        const date = new Date(t.timestamp);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const localDateString = `${year}-${month}-${day}`;
+        if (localDateString !== searchDate) return false;
       }
       return true;
     });
@@ -71,16 +75,16 @@ export function TransactionHistory() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold">Transaction History</h2>
+      <h2 className="text-2xl font-bold dark:text-white">Transaction History</h2>
 
       {/* Filters */}
-      <div className="card space-y-4">
-        <h3 className="font-semibold text-gray-700">Filters</h3>
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 border border-blue-200 dark:border-blue-700 rounded-lg shadow-md p-6 space-y-4">
+        <h3 className="font-semibold text-blue-900 dark:text-blue-200">Filters</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
+          <div className="bg-white dark:bg-slate-700 rounded-lg p-4 border border-gray-200 dark:border-slate-600">
             <label
                 htmlFor="statusFilter"
-                className="block text-sm font-medium text-gray-700 mb-2"
+                className="block text-sm font-semibold text-blue-700 dark:text-blue-300 mb-2"
                 >
                 Status
                 </label>
@@ -91,18 +95,17 @@ export function TransactionHistory() {
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="input-field"
                 >
-
               <option value="all">All Status</option>
               <option value="success">Success</option>
               <option value="failed">Failed</option>
               <option value="pending">Pending</option>
             </select>
-          </div>
+            </div>
 
-          <div>
+          <div className="bg-white dark:bg-slate-700 rounded-lg p-4 border border-gray-200 dark:border-slate-600">
             <label
                 htmlFor="typeFilter"
-                className="block text-sm font-medium text-gray-700 mb-2"
+                className="block text-sm font-semibold text-purple-700 dark:text-purple-300 mb-2"
                 >
                 Type
                 </label>
@@ -113,18 +116,17 @@ export function TransactionHistory() {
                 onChange={(e) => setTypeFilter(e.target.value)}
                 className="input-field"
                 >
-
               <option value="all">All Types</option>
               <option value="credit">Credit</option>
               <option value="debit">Debit</option>
               <option value="fee">Fee</option>
             </select>
-          </div>
+            </div>
 
-          <div>
+          <div className="bg-white dark:bg-slate-700 rounded-lg p-4 border border-gray-200 dark:border-slate-600">
             <label
                 htmlFor="dateFilter"
-                className="block text-sm font-medium text-gray-700 mb-2"
+                className="block text-sm font-semibold text-amber-700 dark:text-amber-300 mb-2"
                 >
                 Date
                 </label>
@@ -136,8 +138,7 @@ export function TransactionHistory() {
                 onChange={(e) => setSearchDate(e.target.value)}
                 className="input-field"
                 />
-
-          </div>
+            </div>
         </div>
       </div>
 
@@ -162,20 +163,20 @@ export function TransactionHistory() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50 border-b">
+              <thead className="bg-gray-50 dark:bg-slate-700 border-b dark:border-slate-600">
                 <tr>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Description</th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Type</th>
-                  <th className="px-6 py-3 text-right text-sm font-semibold text-gray-700">Amount</th>
-                  <th className="px-6 py-3 text-center text-sm font-semibold text-gray-700">Status</th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Date</th>
-                  <th className="px-6 py-3 text-center text-sm font-semibold text-gray-700">Action</th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 dark:text-white">Description</th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 dark:text-white">Type</th>
+                  <th className="px-6 py-3 text-right text-sm font-semibold text-gray-700 dark:text-white">Amount</th>
+                  <th className="px-6 py-3 text-center text-sm font-semibold text-gray-700 dark:text-white">Status</th>
+                  <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 dark:text-white">Date</th>
+                  <th className="px-6 py-3 text-center text-sm font-semibold text-gray-700 dark:text-white">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y">
+              <tbody className="divide-y dark:divide-slate-600">
                 {filteredTransactions.map((transaction) => (
-                  <tr key={transaction.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 text-sm text-gray-900">{transaction.description}</td>
+                  <tr key={transaction.id} className="hover:bg-gray-50 dark:hover:bg-slate-700 dark:bg-slate-800">
+                    <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{transaction.description}</td>
                     <td className={`px-6 py-4 text-sm font-semibold ${getTypeColor(transaction.type)}`}>
                       <span className="mr-1">{getTypeIcon(transaction.type)}</span>
                       {transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1)}
@@ -188,13 +189,13 @@ export function TransactionHistory() {
                         {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-600">
+                    <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
                       {new Date(transaction.timestamp).toLocaleDateString()} {new Date(transaction.timestamp).toLocaleTimeString()}
                     </td>
                     <td className="px-6 py-4 text-sm text-center">
                       <button
                         onClick={() => handleDelete(transaction.id)}
-                        className="text-red-600 hover:text-red-900 font-medium"
+                        className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 font-medium"
                       >
                         Delete
                       </button>

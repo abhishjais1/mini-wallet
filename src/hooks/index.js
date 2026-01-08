@@ -1,5 +1,6 @@
 import { useContext } from 'react';
 import { WalletContext } from '../context/WalletContext.jsx';
+import { ThemeContext } from '../context/ThemeContext.jsx';
 
 /**
  * Custom hook to access wallet context
@@ -65,4 +66,15 @@ export function useAppState() {
     error,
     clearError,
   };
+}
+
+/**
+ * Custom hook for theme management
+ */
+export function useTheme() {
+  const context = useContext(ThemeContext);
+  if (!context) {
+    throw new Error('useTheme must be used within a ThemeProvider');
+  }
+  return context;
 }

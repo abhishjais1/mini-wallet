@@ -34,14 +34,14 @@ export function AddMoneyForm() {
   };
 
   return (
-    <div className="card max-w-md mx-auto">
-      <h2 className="text-2xl font-bold mb-6">Add Money to Wallet</h2>
+    <div className="card dark:bg-slate-800 max-w-md mx-auto">
+      <h2 className="text-2xl font-bold mb-6 dark:text-white">Add Money to Wallet</h2>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
           <label
             htmlFor="amount"
-            className="block text-sm font-medium text-gray-700 mb-2"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
           >
             Amount (₹)
           </label>

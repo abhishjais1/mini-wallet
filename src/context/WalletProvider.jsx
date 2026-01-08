@@ -38,9 +38,11 @@ function walletReducer(state, action) {
     case 'UPDATE_TRANSACTION':
       return {
         ...state,
-        transactions: state.transactions.map((t) =>
-          t.id === action.payload.id ? { ...t, ...action.payload.updates } : t
-        ),
+        transactions: state.transactions
+          .map((t) =>
+            t.id === action.payload.id ? { ...t, ...action.payload.updates } : t
+          )
+          .filter((t) => !t.deleted),
       };
 
     case 'CLEAR_ERROR':
