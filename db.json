@@ -3,7 +3,7 @@
     {
       "id": "1",
       "name": "Abhishek",
-      "balance": 4388.379999999996
+      "balance": 91185.35999999999
     },
     {
       "id": "2",
@@ -647,6 +647,171 @@
       "recipient": "Self",
       "description": "Money Added",
       "timestamp": "2026-01-08T14:49:00.912Z",
+      "deleted": false
+    },
+    {
+      "id": "1767902938309",
+      "userId": "1",
+      "type": "credit",
+      "amount": 100,
+      "status": "success",
+      "recipient": "Self",
+      "description": "Money Added",
+      "timestamp": "2026-01-08T20:08:58.309Z",
+      "deleted": false
+    },
+    {
+      "id": "1767903270632",
+      "userId": "1",
+      "type": "credit",
+      "amount": 1000,
+      "status": "success",
+      "recipient": "Self",
+      "description": "Money Added",
+      "timestamp": "2026-01-08T20:14:30.632Z",
+      "deleted": false
+    },
+    {
+      "id": "1767903610560",
+      "userId": "1",
+      "type": "credit",
+      "amount": 100,
+      "status": "success",
+      "recipient": "Self",
+      "description": "Money Added",
+      "timestamp": "2026-01-08T20:20:10.560Z",
+      "deleted": false
+    },
+    {
+      "id": "1767903630868",
+      "userId": "1",
+      "type": "credit",
+      "amount": 1000,
+      "status": "success",
+      "recipient": "Self",
+      "description": "Money Added",
+      "timestamp": "2026-01-08T20:20:30.868Z",
+      "deleted": false
+    },
+    {
+      "id": "1767903848113",
+      "userId": "1",
+      "type": "credit",
+      "amount": 5000,
+      "status": "success",
+      "recipient": "Self",
+      "description": "Money Added",
+      "timestamp": "2026-01-08T20:24:08.113Z",
+      "deleted": false
+    },
+    {
+      "id": "1767904438333",
+      "userId": "1",
+      "type": "debit",
+      "amount": 100,
+      "status": "success",
+      "recipient": "2",
+      "description": "Transfer to User 2",
+      "timestamp": "2026-01-08T20:33:58.333Z",
+      "deleted": false
+    },
+    {
+      "id": "1767904438334",
+      "userId": "1",
+      "type": "fee",
+      "amount": 2,
+      "status": "success",
+      "recipient": "System",
+      "description": "Transaction Fee",
+      "timestamp": "2026-01-08T20:33:58.333Z",
+      "deleted": false
+    },
+    {
+      "id": "1767908291211",
+      "userId": "1",
+      "type": "credit",
+      "amount": 100,
+      "status": "success",
+      "recipient": "Self",
+      "description": "Money Added",
+      "timestamp": "2026-01-08T21:38:11.212Z",
+      "deleted": false
+    },
+    {
+      "id": "1767908303129",
+      "userId": "1",
+      "type": "debit",
+      "amount": 10000,
+      "status": "success",
+      "recipient": "2",
+      "description": "Transfer to User 2",
+      "timestamp": "2026-01-08T21:38:23.129Z",
+      "deleted": false
+    },
+    {
+      "id": "1767908303130",
+      "userId": "1",
+      "type": "fee",
+      "amount": 200,
+      "status": "success",
+      "recipient": "System",
+      "description": "Transaction Fee",
+      "timestamp": "2026-01-08T21:38:23.129Z",
+      "deleted": false
+    },
+    {
+      "id": "1767908325050",
+      "userId": "1",
+      "type": "credit",
+      "amount": 100000,
+      "status": "success",
+      "recipient": "Self",
+      "description": "Money Added",
+      "timestamp": "2026-01-08T21:38:45.050Z",
+      "deleted": false
+    },
+    {
+      "id": "1767908376377",
+      "userId": "1",
+      "type": "debit",
+      "amount": 10000,
+      "status": "success",
+      "recipient": "4",
+      "description": "Transfer to User 4",
+      "timestamp": "2026-01-08T21:39:36.377Z",
+      "deleted": false
+    },
+    {
+      "id": "1767908376378",
+      "userId": "1",
+      "type": "fee",
+      "amount": 200,
+      "status": "success",
+      "recipient": "System",
+      "description": "Transaction Fee",
+      "timestamp": "2026-01-08T21:39:36.377Z",
+      "deleted": false
+    },
+    {
+      "id": "1767908415209",
+      "userId": "1",
+      "type": "debit",
+      "amount": 1,
+      "status": "success",
+      "recipient": "3",
+      "description": "Transfer to User 3",
+      "timestamp": "2026-01-08T21:40:15.209Z",
+      "deleted": false
+    },
+    {
+      "id": "1767908415210",
+      "userId": "1",
+      "type": "fee",
+      "amount": 0.02,
+      "status": "success",
+      "recipient": "System",
+      "description": "Transaction Fee",
+      "timestamp": "2026-01-08T21:40:15.209Z",
       "deleted": false
     }
   ]

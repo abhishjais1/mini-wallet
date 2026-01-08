@@ -96,7 +96,7 @@ export function Modal({
           'relative w-full',
           'bg-surface border border-border rounded-2xl shadow-2xl shadow-black/50',
           'animate-slideUp max-h-[90vh] overflow-y-auto',
-          sizeClasses[size] || sizeClasses.md,
+          //sizeClasses[size] || sizeClasses.md,
           className
         )}
         role="dialog"
