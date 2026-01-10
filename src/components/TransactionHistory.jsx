@@ -75,7 +75,7 @@ function TransactionHistoryContent() {
     setCurrentPage(1);
   }, [statusFilter, typeFilter, startDate, endDate, itemsPerPage]);
 
-  // Generate page numbers for pagination
+  //  page numbers for pagination
   const getPageNumbers = () => {
     const pages = [];
     const maxVisiblePages = 5;
@@ -106,7 +106,7 @@ function TransactionHistoryContent() {
         pages.push('...');
       }
       
-      // Always show last page
+      //  show last page
       pages.push(totalPages);
     }
     
@@ -147,7 +147,7 @@ function TransactionHistoryContent() {
     }
   };
 
-  // Get transaction type icon and color
+  //  transaction type icon and color
   const getTypeConfig = (type) => {
     switch (type) {
       case 'credit':
