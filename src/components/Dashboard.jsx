@@ -15,11 +15,11 @@ import { EmptyState } from './ui/EmptyState.jsx';
 export function Dashboard() {
   const { currentUser, loading, balance, transactions } = useWallet();
 
-  // Get last 10 non-deleted transactions
-  const recentTransactions = transactions
+  // Get last 10 non-deleted transactions (sorted by date, newest first)
+  const recentTransactions = [...transactions]
     .filter((t) => !t.deleted)
-    .slice(0, 10)
-    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+    .slice(0, 10);
 
   // Stats calculations
   const totalTransactions = transactions.filter((t) => !t.deleted).length;
@@ -139,8 +139,8 @@ export function Dashboard() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-4">
           <CardTitle className="flex items-center gap-3">
-            <IconContainer name="clock-counter-clockwise" size="md" variant="default">
-              <Icon name="clock-counter-clockwise" size="sm" />
+            <IconContainer name="history" size="md" variant="default">
+              <Icon name="history" size="sm" />
             </IconContainer>
             Recent Transactions
           </CardTitle>

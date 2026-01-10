@@ -49,6 +49,50 @@ A modern, lightweight wallet application built with React, featuring money manag
 - **ESLint 9.39**: Code linting
 - **PostCSS 8.5**: CSS processing
 
+## 🏗️ Architecture
+
+### State Management
+The app uses **React Context API with useReducer** pattern for global state management:
+
+```
+WalletContext.jsx
+├── State: { user, transactions, loading, error }
+├── Actions: addMoney, transferMoney, deleteTransaction, retryTransaction
+└── Reducer: Handles state transitions with action types
+```
+
+**Why Context + useReducer?**
+- Predictable state updates through reducer pattern
+- Centralized business logic
+- Easy testing with action dispatch
+- No external dependencies (Redux-like without Redux)
+
+### Data Flow
+```
+User Action → Dispatch Action → API Call → Reducer Update → UI Re-render
+     ↓              ↓              ↓             ↓              ↓
+  Button       addMoney()    POST /txn     SET_USER      Balance updates
+```
+
+### Component Architecture
+```
+App.jsx (Router)
+├── Dashboard.jsx (useWallet hook)
+│   └── Recent transactions, Quick actions
+├── AddMoneyForm.jsx (react-hook-form)
+│   └── Validation, API call, Toast feedback
+├── TransferMoneyForm.jsx
+│   └── Recipient select, Fee calc, Confirmation modal
+└── TransactionHistory.jsx
+    └── Filters, Soft delete, Status badges
+```
+
+### API Layer
+- **Axios instance** with base URL configuration
+- **Centralized API functions** in `utils/api.js`
+- **Error handling** with try-catch and error propagation
+- **Mock backend** with json-server for development
+
 ## 📋 Prerequisites
 
 - Node.js 16+ and npm/yarn
@@ -131,53 +175,104 @@ npm run test:coverage
 ```
 
 ### Test Structure
-Tests cover:
-- **appConfig.test.js**: Business rule validation (fee, limits)
-- **Dashboard.test.jsx**: Dashboard rendering and data display
-- **AddMoneyForm.test.jsx**: Add money form validation and submission
-- **TransferMoneyForm.test.jsx**: Transfer form with fee calculation
-- **TransactionHistory.test.jsx**: Transaction filtering and deletion
+The project includes **131 tests** across **9 test files**:
+
+| Test File | Tests | Description |
+|-----------|-------|-------------|
+| `appConfig.test.js` | 17 | Business rules, fee calculation, validation |
+| `formatters.test.js` | 45 | Currency, date, relative time formatting |
+| `api.test.js` | 18 | API functions, error handling, CRUD operations |
+| `WalletContext.test.jsx` | 22 | Context state, actions, reducer logic |
+| `Dashboard.test.jsx` | 5 | Dashboard rendering, balance display |
+| `AddMoneyForm.test.jsx` | 5 | Add money form validation |
+| `TransferMoneyForm.test.jsx` | 5 | Transfer form with fee calculation |
+| `TransactionHistory.test.jsx` | 6 | Transaction filtering and deletion |
+| `TransferFlow.integration.test.jsx` | 8 | End-to-end transfer flow tests |
+
+### Test Categories
+- **Unit Tests**: Individual functions and utilities (formatters, api, config)
+- **Component Tests**: React component rendering and interactions
+- **Context Tests**: State management and reducer logic
+- **Integration Tests**: Complete user flows across multiple components
+
+### Running Specific Tests
+```bash
+# Run a specific test file
+npx vitest run src/test/api.test.js
+
+# Run tests matching a pattern
+npx vitest run --grep "transfer"
+
+# Run tests in watch mode
+npx vitest
+
+# Run with verbose output
+npx vitest run --reporter=verbose
+```
 
 ## 📁 Project Structure
 
 ```
-mini-wallet-app1/
+mini-wallet-app/
 ├── src/
 │   ├── components/
-│   │   ├── Dashboard.jsx              # Main dashboard component
-│   │   ├── AddMoneyForm.jsx           # Add money form
-│   │   ├── TransferMoneyForm.jsx      # Transfer form with confirmation
-│   │   ├── TransactionHistory.jsx     # Transaction list with filters
-│   │   ├── Toast.jsx                  # Toast & Error Boundary components
-│   │   └── Loading.jsx                # Loading skeletons and modals
-│   ├── pages/                         # Page-level components
+│   │   ├── Dashboard.jsx              # Main dashboard with balance & quick actions
+│   │   ├── AddMoneyForm.jsx           # Add money form with validation
+│   │   ├── TransferMoneyForm.jsx      # Transfer form with confirmation modal
+│   │   ├── TransactionHistory.jsx     # Transaction list with filters & soft delete
+│   │   ├── ErrorBoundary.jsx          # Error boundary for graceful error handling
+│   │   └── ui/                         # Reusable UI components
+│   │       ├── Badge.jsx               # Status badges
+│   │       ├── Button.jsx              # Button component
+│   │       ├── Card.jsx                # Card container
+│   │       ├── EmptyState.jsx          # Empty state visualization
+│   │       ├── Icon.jsx                # Icon wrapper for lucide-react
+│   │       ├── Input.jsx               # Form input component
+│   │       ├── Modal.jsx               # Modal dialog
+│   │       ├── Select.jsx              # Dropdown select
+│   │       ├── Skeleton.jsx            # Loading skeletons
+│   │       ├── Toast.jsx               # Toast notifications
+│   │       └── index.js                # UI component exports
 │   ├── context/
-│   │   └── WalletContext.jsx          # Global state management
+│   │   ├── WalletContext.jsx          # Global state (Context + useReducer)
+│   │   └── ThemeContext.jsx           # Theme management
 │   ├── hooks/
-│   │   └── index.js                   # Custom React hooks
+│   │   └── index.js                   # Custom React hooks (useWallet, etc.)
 │   ├── utils/
-│   │   └── api.js                     # Axios API client
+│   │   ├── api.js                     # Axios API client with CRUD operations
+│   │   ├── formatters.js              # Currency, date, time formatters
+│   │   └── cn.js                      # Tailwind class name utility
 │   ├── config/
-│   │   └── appConfig.js               # Business rules and config
+│   │   └── appConfig.js               # Business rules and configuration
 │   ├── test/
-│   │   ├── setup.js                   # Vitest setup
-│   │   ├── appConfig.test.js          # Config tests
-│   │   ├── Dashboard.test.jsx         # Dashboard tests
-│   │   ├── AddMoneyForm.test.jsx      # Add money tests
-│   │   ├── TransferMoneyForm.test.jsx # Transfer tests
-│   │   └── TransactionHistory.test.jsx # History tests
+│   │   ├── setup.js                   # Vitest setup with mocks
+│   │   ├── appConfig.test.js          # Config & business rules tests
+│   │   ├── formatters.test.js         # Formatter utility tests
+│   │   ├── api.test.js                # API function tests
+│   │   ├── WalletContext.test.jsx     # Context state & actions tests
+│   │   ├── Dashboard.test.jsx         # Dashboard component tests
+│   │   ├── AddMoneyForm.test.jsx      # Add money form tests
+│   │   ├── TransferMoneyForm.test.jsx # Transfer form tests
+│   │   ├── TransactionHistory.test.jsx # Transaction history tests
+│   │   └── TransferFlow.integration.test.jsx # Integration tests
+│   ├── assets/                        # Static assets (images, etc.)
 │   ├── App.jsx                        # Main app with routing
 │   ├── App.css                        # App styles
 │   ├── index.css                      # Tailwind directives
 │   └── main.jsx                       # Entry point
+├── docs/                              # Documentation
+│   ├── Requirements.md                # Project requirements
+│   ├── design-prompt.md               # Design specifications
+│   ├── basedesign.md                  # Base design document
+│   └── implementation-plan.md         # Implementation plan
 ├── public/                            # Static assets
 ├── db.json                            # Mock database with sample data
 ├── package.json                       # Dependencies
 ├── vite.config.js                     # Vite configuration
 ├── vitest.config.js                   # Vitest configuration
-├── tailwind.config.js                 # Tailwind configuration
 ├── postcss.config.js                  # PostCSS configuration
 ├── eslint.config.js                   # ESLint configuration
+├── index.html                         # HTML entry point
 └── README.md                          # This file
 ```
 
@@ -337,4 +432,4 @@ This project is for educational purposes. Feel free to use and modify as needed.
 
 **Built with ❤️ for learning fintech concepts**
 
-Last Updated: January 7, 2025
+Last Updated: January 10, 2026

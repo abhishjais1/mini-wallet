@@ -3,7 +3,7 @@
     {
       "id": "1",
       "name": "Abhishek",
-      "balance": 91185.35999999999
+      "balance": 162581.4
     },
     {
       "id": "2",
@@ -141,7 +141,7 @@
       "recipient": "Self",
       "description": "Money Added",
       "timestamp": "2026-01-08T09:17:06.596Z",
-      "deleted": false
+      "deleted": true
     },
     {
       "id": "1767863831495",
@@ -152,7 +152,7 @@
       "recipient": "Self",
       "description": "Money Added",
       "timestamp": "2026-01-08T09:17:11.495Z",
-      "deleted": false
+      "deleted": true
     },
     {
       "id": "1767863835366",
@@ -812,6 +812,216 @@
       "recipient": "System",
       "description": "Transaction Fee",
       "timestamp": "2026-01-08T21:40:15.209Z",
+      "deleted": false
+    },
+    {
+      "id": "1767982155974",
+      "userId": "1",
+      "type": "credit",
+      "amount": 1000,
+      "status": "success",
+      "recipient": "Self",
+      "description": "Money Added",
+      "timestamp": "2026-01-09T18:09:15.974Z",
+      "deleted": true
+    },
+    {
+      "id": "1767982167277",
+      "userId": "1",
+      "type": "debit",
+      "amount": 10000,
+      "status": "success",
+      "recipient": "2",
+      "description": "Transfer to User 2",
+      "timestamp": "2026-01-09T18:09:27.277Z",
+      "deleted": true
+    },
+    {
+      "id": "1767982167278",
+      "userId": "1",
+      "type": "fee",
+      "amount": 200,
+      "status": "success",
+      "recipient": "System",
+      "description": "Transaction Fee",
+      "timestamp": "2026-01-09T18:09:27.277Z",
+      "deleted": false
+    },
+    {
+      "id": "1767982185917",
+      "userId": "1",
+      "type": "debit",
+      "amount": 9999.99,
+      "status": "success",
+      "recipient": "4",
+      "description": "Transfer to User 4",
+      "timestamp": "2026-01-09T18:09:45.917Z",
+      "deleted": false
+    },
+    {
+      "id": "1767982185918",
+      "userId": "1",
+      "type": "fee",
+      "amount": 200,
+      "status": "success",
+      "recipient": "System",
+      "description": "Transaction Fee",
+      "timestamp": "2026-01-09T18:09:45.917Z",
+      "deleted": false
+    },
+    {
+      "id": "1768028836181",
+      "userId": "1",
+      "type": "debit",
+      "amount": 10000,
+      "status": "failed",
+      "recipient": "2",
+      "description": "Transfer to User 2",
+      "timestamp": "2026-01-10T07:07:16.181Z",
+      "deleted": false,
+      "reason": "Network timeout - please retry"
+    },
+    {
+      "id": "1768028836182",
+      "userId": "1",
+      "type": "fee",
+      "amount": 200,
+      "status": "failed",
+      "recipient": "System",
+      "description": "Transaction Fee",
+      "timestamp": "2026-01-10T07:07:16.181Z",
+      "deleted": false
+    },
+    {
+      "id": "1768030854118",
+      "userId": "1",
+      "type": "credit",
+      "amount": 100,
+      "status": "success",
+      "recipient": "Self",
+      "description": "Money Added",
+      "timestamp": "2026-01-10T07:40:54.118Z",
+      "deleted": false
+    },
+    {
+      "id": "1768031093000",
+      "userId": "1",
+      "type": "credit",
+      "amount": 100,
+      "status": "success",
+      "recipient": "Self",
+      "description": "Money Added",
+      "timestamp": "2026-01-10T07:44:53.000Z",
+      "deleted": false
+    },
+    {
+      "id": "1768047330412",
+      "userId": "1",
+      "type": "debit",
+      "amount": 99.99,
+      "status": "success",
+      "recipient": "2",
+      "description": "Transfer to User 2",
+      "timestamp": "2026-01-10T12:15:30.412Z",
+      "deleted": false
+    },
+    {
+      "id": "1768047330413",
+      "userId": "1",
+      "type": "fee",
+      "amount": 2,
+      "status": "success",
+      "recipient": "System",
+      "description": "Transaction Fee",
+      "timestamp": "2026-01-10T12:15:30.412Z",
+      "deleted": false
+    },
+    {
+      "id": "1768052436279",
+      "userId": "1",
+      "type": "credit",
+      "amount": 1000,
+      "status": "success",
+      "recipient": "Self",
+      "description": "Money Added",
+      "timestamp": "2026-01-10T13:40:36.279Z",
+      "deleted": false
+    },
+    {
+      "id": "1768052447167",
+      "userId": "1",
+      "type": "debit",
+      "amount": 9999.98,
+      "status": "success",
+      "recipient": "2",
+      "description": "Transfer to User 2",
+      "timestamp": "2026-01-10T13:40:47.167Z",
+      "deleted": false
+    },
+    {
+      "id": "1768052447168",
+      "userId": "1",
+      "type": "fee",
+      "amount": 200,
+      "status": "success",
+      "recipient": "System",
+      "description": "Transaction Fee",
+      "timestamp": "2026-01-10T13:40:47.167Z",
+      "deleted": false
+    },
+    {
+      "id": "1768052516215",
+      "userId": "1",
+      "type": "debit",
+      "amount": 100,
+      "status": "success",
+      "recipient": "3",
+      "description": "Transfer to User 3",
+      "timestamp": "2026-01-10T13:41:56.215Z",
+      "deleted": false
+    },
+    {
+      "id": "1768052516216",
+      "userId": "1",
+      "type": "fee",
+      "amount": 2,
+      "status": "success",
+      "recipient": "System",
+      "description": "Transaction Fee",
+      "timestamp": "2026-01-10T13:41:56.215Z",
+      "deleted": false
+    },
+    {
+      "id": "1768052703632",
+      "userId": "1",
+      "type": "credit",
+      "amount": 100000,
+      "status": "success",
+      "recipient": "Self",
+      "description": "Money Added",
+      "timestamp": "2026-01-10T13:45:03.632Z",
+      "deleted": false
+    },
+    {
+      "id": "1768052737759",
+      "userId": "1",
+      "type": "debit",
+      "amount": 10000,
+      "status": "success",
+      "recipient": "3",
+      "description": "Transfer to User 3",
+      "timestamp": "2026-01-10T13:45:37.759Z",
+      "deleted": false
+    },
+    {
+      "id": "1768052737760",
+      "userId": "1",
+      "type": "fee",
+      "amount": 200,
+      "status": "success",
+      "recipient": "System",
+      "description": "Transaction Fee",
+      "timestamp": "2026-01-10T13:45:37.759Z",
       "deleted": false
     }
   ]

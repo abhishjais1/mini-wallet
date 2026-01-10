@@ -47,20 +47,21 @@ export const APP_CONFIG = {
 /**
  * Calculate transaction fee
  * @param {number} amount - Transaction amount
- * @returns {number} Fee amount
+ * @returns {number} Fee amount (rounded to 2 decimal places)
  */
 export const calculateFee = (amount) => {
-  return Number((amount * APP_CONFIG.TRANSACTION_FEE.percentage / 100).toFixed(2));
+  const fee = (amount * APP_CONFIG.TRANSACTION_FEE.percentage) / 100;
+  return Math.round(fee * 100) / 100;
 };
 
 /**
  * Calculate total amount including fee
  * @param {number} amount - Transaction amount
- * @returns {number} Total amount including fee
+ * @returns {number} Total amount including fee (rounded to 2 decimal places)
  */
 export const calculateTotalWithFee = (amount) => {
   const fee = calculateFee(amount);
-  return Number((amount + fee).toFixed(2));
+  return Math.round((amount + fee) * 100) / 100;
 };
 
 /**

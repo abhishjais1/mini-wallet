@@ -131,7 +131,7 @@ export function WalletProvider({ children }) {
         };
 
         const createdTransaction = await api.createTransaction(transaction);
-        const newBalance = state.balance + Number(amount);
+        const newBalance = Math.round((state.balance + Number(amount)) * 100) / 100;
 
         await api.updateUserBalance(state.currentUser.id, newBalance);
 
@@ -179,7 +179,7 @@ export function WalletProvider({ children }) {
           throw new Error('User data not loaded. Please refresh the page.');
         }
 
-        const totalAmount = Number(amount) + fee;
+        const totalAmount = Math.round((Number(amount) + fee) * 100) / 100;
 
         // Create debit transaction with pending status
         const debitTransaction = {
@@ -210,7 +210,7 @@ export function WalletProvider({ children }) {
         const createdDebit = await api.createTransaction(debitTransaction);
         const createdFee = await api.createTransaction(feeTransaction);
 
-        const newBalance = state.balance - totalAmount;
+        const newBalance = Math.round((state.balance - totalAmount) * 100) / 100;
         await api.updateUserBalance(state.currentUser.id, newBalance);
 
         dispatch({ type: 'ADD_TRANSACTION', payload: createdDebit });

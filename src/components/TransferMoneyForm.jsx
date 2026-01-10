@@ -29,7 +29,7 @@ function TransferMoneyFormContent() {
   // Watch amount for real-time fee calculation
   const amount = watch('amount');
   const fee = amount ? calculateFee(Number(amount)) : 0;
-  const total = amount ? Number(amount) + fee : 0;
+  const total = amount ? Math.round((Number(amount) + fee) * 100) / 100 : 0;
 
   const onSubmit = async (data) => {
     const validation = validateTransferAmount(Number(data.amount), balance);

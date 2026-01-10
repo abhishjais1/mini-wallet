@@ -105,7 +105,7 @@ describe('TransactionHistory Component', () => {
     await user.selectOptions(statusFilter, 'success');
 
     await waitFor(() => {
-      expect(screen.getByText('1 of 3 transactions')).toBeInTheDocument();
+      expect(screen.getByText(/Showing 1-1 of 1 transactions/i)).toBeInTheDocument();
     });
   });
 
@@ -129,7 +129,7 @@ describe('TransactionHistory Component', () => {
     await user.selectOptions(typeFilter, 'credit');
 
     await waitFor(() => {
-      expect(screen.getByText('1 of 3 transactions')).toBeInTheDocument();
+      expect(screen.getByText(/Showing 1-1 of 1 transactions/i)).toBeInTheDocument();
     });
   });
 
@@ -168,7 +168,7 @@ describe('TransactionHistory Component', () => {
     await user.selectOptions(statusFilter, 'success');
 
     await waitFor(() => {
-      expect(screen.getByText('1 of 3 transactions')).toBeInTheDocument();
+      expect(screen.getByText(/Showing 1-1 of 1 transactions/i)).toBeInTheDocument();
     });
 
     // Clear filters
@@ -176,7 +176,7 @@ describe('TransactionHistory Component', () => {
     await user.click(clearButton);
 
     await waitFor(() => {
-      expect(screen.getByText('3 of 3 transactions')).toBeInTheDocument();
+      expect(screen.getByText(/Showing 1-3 of 3 transactions/i)).toBeInTheDocument();
     });
   });
 });

@@ -20,7 +20,7 @@ function NavigationBar() {
     { path: '/', label: 'Dashboard', icon: 'layout-dashboard' },
     { path: '/add-money', label: 'Add Money', icon: 'plus-circle' },
     { path: '/transfer', label: 'Transfer', icon: 'send' },
-    { path: '/transactions', label: 'History', icon: 'clock-counter-clockwise' },
+    { path: '/transactions', label: 'History', icon: 'history' },
   ];
 
   const isActive = (path) => location.pathname === path;

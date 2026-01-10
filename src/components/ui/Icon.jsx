@@ -2,15 +2,19 @@ import React from 'react';
 import { cn } from '../../utils/cn.js';
 import * as LucideIcons from 'lucide-react';
 
-// Convert camelCase to kebab-case for lucide-react icon names
-function toKebabCase(str) {
-  return str.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+// Convert kebab-case to PascalCase for lucide-react icon names
+// e.g., "trash-2" -> "Trash2", "arrow-left" -> "ArrowLeft", "refresh-cw" -> "RefreshCw"
+function toPascalCase(str) {
+  return str
+    .split('-')
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+    .join('');
 }
 
 /**
  * Icon component wrapper for lucide-react icons
  *
- * @param {string} name - Name of the lucide-react icon (camelCase or kebab-case)
+ * @param {string} name - Name of the lucide-react icon (PascalCase, camelCase, or kebab-case)
  * @param {string} size - Size of the icon: 'sm' | 'md' | 'lg' | 'xl'
  * @param {string} color - Color class
  */
@@ -21,11 +25,13 @@ export function Icon({
   className = '',
   ...props
 }) {
-  // Try camelCase first, then kebab-case
+  // Try direct lookup first (PascalCase or exact match)
   let IconComponent = LucideIcons[name];
+  
+  // If not found, try converting from kebab-case to PascalCase
   if (!IconComponent) {
-    const kebabName = toKebabCase(name);
-    IconComponent = LucideIcons[kebabName];
+    const pascalName = toPascalCase(name);
+    IconComponent = LucideIcons[pascalName];
   }
 
   if (!IconComponent) {

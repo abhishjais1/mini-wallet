@@ -27,34 +27,91 @@ function TransactionHistoryContent() {
   const [endDate, setEndDate] = useState('');
   const [deleteConfirm, setDeleteConfirm] = useState(null);
 
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
   // Filter transactions
   const filteredTransactions = useMemo(() => {
-    return transactions.filter((t) => {
-      // Status filter
-      if (statusFilter !== 'all' && t.status !== statusFilter) return false;
+    // First filter, then sort by date descending (most recent first)
+    return transactions
+      .filter((t) => {
+        // Status filter
+        if (statusFilter !== 'all' && t.status !== statusFilter) return false;
 
-      // Type filter
-      if (typeFilter !== 'all' && t.type !== typeFilter) return false;
+        // Type filter
+        if (typeFilter !== 'all' && t.type !== typeFilter) return false;
 
-      // Start date filter
-      if (startDate) {
-        const transactionDate = new Date(t.timestamp);
-        const start = new Date(startDate);
-        start.setHours(0, 0, 0, 0);
-        if (transactionDate < start) return false;
-      }
+        // Start date filter
+        if (startDate) {
+          const transactionDate = new Date(t.timestamp);
+          const start = new Date(startDate);
+          start.setHours(0, 0, 0, 0);
+          if (transactionDate < start) return false;
+        }
 
-      // End date filter
-      if (endDate) {
-        const transactionDate = new Date(t.timestamp);
-        const end = new Date(endDate);
-        end.setHours(23, 59, 59, 999);
-        if (transactionDate > end) return false;
-      }
+        // End date filter
+        if (endDate) {
+          const transactionDate = new Date(t.timestamp);
+          const end = new Date(endDate);
+          end.setHours(23, 59, 59, 999);
+          if (transactionDate > end) return false;
+        }
 
-      return true;
-    });
+        return true;
+      })
+      // Sort by timestamp descending (newest first)
+      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
   }, [transactions, statusFilter, typeFilter, startDate, endDate]);
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedTransactions = filteredTransactions.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filters change
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [statusFilter, typeFilter, startDate, endDate, itemsPerPage]);
+
+  // Generate page numbers for pagination
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisiblePages = 5;
+    
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Always show first page
+      pages.push(1);
+      
+      // Calculate middle range
+      let start = Math.max(2, currentPage - 1);
+      let end = Math.min(totalPages - 1, currentPage + 1);
+      
+      // Add ellipsis if needed
+      if (start > 2) {
+        pages.push('...');
+      }
+      
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+      
+      // Add ellipsis if needed
+      if (end < totalPages - 1) {
+        pages.push('...');
+      }
+      
+      // Always show last page
+      pages.push(totalPages);
+    }
+    
+    return pages;
+  };
 
   // Check if any filters are active
   const hasActiveFilters =
@@ -66,6 +123,7 @@ function TransactionHistoryContent() {
     setTypeFilter('all');
     setStartDate('');
     setEndDate('');
+    setCurrentPage(1);
   };
 
   // Handle delete
@@ -112,7 +170,10 @@ function TransactionHistoryContent() {
             Transaction History
           </h1>
           <p className="text-text-secondary">
-            {filteredTransactions.length} of {transactions.length} transactions
+            {filteredTransactions.length > 0 
+              ? `Showing ${startIndex + 1}-${Math.min(endIndex, filteredTransactions.length)} of ${filteredTransactions.length} transactions`
+              : `${filteredTransactions.length} of ${transactions.length} transactions`
+            }
           </p>
         </div>
         <Link to="/">
@@ -214,7 +275,7 @@ function TransactionHistoryContent() {
             </div>
           ) : (
             <div className="divide-y divide-border">
-              {filteredTransactions.map((transaction) => {
+              {paginatedTransactions.map((transaction) => {
                 const typeConfig = getTypeConfig(transaction.type);
                 const isFailed = transaction.status === 'failed';
 
@@ -302,6 +363,72 @@ function TransactionHistoryContent() {
             </div>
           )}
         </CardContent>
+
+        {/* Pagination Controls */}
+        {filteredTransactions.length > 0 && totalPages > 1 && (
+          <div className="p-4 border-t border-border">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              {/* Items per page selector */}
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-text-secondary">Show</span>
+                <Select
+                  id="itemsPerPage"
+                  value={itemsPerPage}
+                  onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                  className="w-20"
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                </Select>
+                <span className="text-sm text-text-secondary">per page</span>
+              </div>
+
+              {/* Page navigation */}
+              <div className="flex items-center gap-1">
+                {/* Previous button */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  title="Previous page"
+                >
+                  <Icon name="chevron-left" size="sm" />
+                </Button>
+
+                {/* Page numbers */}
+                {getPageNumbers().map((page, index) => (
+                  page === '...' ? (
+                    <span key={`ellipsis-${index}`} className="px-2 text-text-muted">...</span>
+                  ) : (
+                    <Button
+                      key={page}
+                      variant={currentPage === page ? 'primary' : 'ghost'}
+                      size="sm"
+                      onClick={() => setCurrentPage(page)}
+                      className="min-w-[36px]"
+                    >
+                      {page}
+                    </Button>
+                  )
+                ))}
+
+                {/* Next button */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  title="Next page"
+                >
+                  <Icon name="chevron-right" size="sm" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </Card>
 
       {/* Delete Confirmation Modal */}
