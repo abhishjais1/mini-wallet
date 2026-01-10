@@ -33,7 +33,7 @@ function walletReducer(state, action) {
       return { ...state, users: action.payload };
 
     case 'SET_CURRENT_USER':
-      return { ...state, currentUser: action.payload, balance: action.payload?.balance || 0 };
+      return { ...state, currentUser: action.payload, balance: Math.round((action.payload?.balance || 0) * 100) / 100 };
 
     case 'SET_TRANSACTIONS':
       return { ...state, transactions: action.payload };
@@ -118,11 +118,12 @@ export function WalletProvider({ children }) {
         }
 
         // Create transaction with pending status
+        const numAmount = Math.round(Number(amount) * 100) / 100;
         const transaction = {
           id: Date.now().toString(),
           userId: state.currentUser.id,
           type: 'credit',
-          amount: Number(amount),
+          amount: numAmount,
           status: APP_CONFIG.TRANSACTION_STATUS.PENDING,
           recipient: 'Self',
           description: 'Money Added',
@@ -131,7 +132,7 @@ export function WalletProvider({ children }) {
         };
 
         const createdTransaction = await api.createTransaction(transaction);
-        const newBalance = Math.round((state.balance + Number(amount)) * 100) / 100;
+        const newBalance = Math.round((state.balance + numAmount) * 100) / 100;
 
         await api.updateUserBalance(state.currentUser.id, newBalance);
 
@@ -179,14 +180,17 @@ export function WalletProvider({ children }) {
           throw new Error('User data not loaded. Please refresh the page.');
         }
 
-        const totalAmount = Math.round((Number(amount) + fee) * 100) / 100;
+        // Round all amounts to 2 decimal places
+        const numAmount = Math.round(Number(amount) * 100) / 100;
+        const numFee = Math.round(Number(fee) * 100) / 100;
+        const totalAmount = Math.round((numAmount + numFee) * 100) / 100;
 
         // Create debit transaction with pending status
         const debitTransaction = {
           id: Date.now().toString(),
           userId: state.currentUser.id,
           type: 'debit',
-          amount: Number(amount),
+          amount: numAmount,
           status: APP_CONFIG.TRANSACTION_STATUS.PENDING,
           recipient: recipientId,
           description: `Transfer to User ${recipientId}`,
@@ -199,7 +203,7 @@ export function WalletProvider({ children }) {
           id: (Date.now() + 1).toString(),
           userId: state.currentUser.id,
           type: 'fee',
-          amount: fee,
+          amount: numFee,
           status: APP_CONFIG.TRANSACTION_STATUS.PENDING,
           recipient: 'System',
           description: 'Transaction Fee',
