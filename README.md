@@ -383,53 +383,6 @@ The app is responsive and works on:
 4. **Offline Mode**: App requires running json-server to function
 5. **Database**: No real database. For production, use actual backend (Node.js, Java, Python)
 
-### Known Issues
-- First load may show loading state briefly while fetching from json-server
-- json-server has limitations on complex queries (use proper backend for production)
 
-## 🔄 Future Enhancements
-
-1. **User Management**
-   - Login/Logout functionality
-   - User profiles and settings
-   - Multi-user support
-
-2. **Analytics**
-   - Transaction charts and graphs
-   - Spending analytics
-   - Export transaction history (CSV/PDF)
-
-3. **Advanced Features**
-   - Recurring transfers
-   - Budget limits
-   - Transaction tags/categories
-   - Transaction search
-
-4. **UI/UX**
-   - Dark mode toggle
-   - Internationalization (i18n)
-   - Accessibility improvements
-   - Mobile app (React Native)
-
-5. **Backend**
-   - Real Node.js/Express backend
-   - Database (MongoDB, PostgreSQL)
-   - Authentication (JWT)
-   - Rate limiting
-
-## 📞 Support
-
-For issues or questions:
-1. Check existing GitHub issues
-2. Review the test files for usage examples
-3. Check `appConfig.js` for configuration options
-
-## 📄 License
-
-This project is for educational purposes. Feel free to use and modify as needed.
-
----
-
-**Built with ❤️ for learning fintech concepts**
 
 Last Updated: January 10, 2026

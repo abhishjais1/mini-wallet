@@ -3,7 +3,7 @@
     {
       "id": "1",
       "name": "Abhishek",
-      "balance": 18856.01
+      "balance": 18036.01
     },
     {
       "id": "2",
@@ -1540,6 +1540,39 @@
       "recipient": "Self",
       "description": "Money Added",
       "timestamp": "2026-01-10T17:29:06.866Z",
+      "deleted": false
+    },
+    {
+      "id": "1768068806422",
+      "userId": "1",
+      "type": "credit",
+      "amount": 200,
+      "status": "success",
+      "recipient": "Self",
+      "description": "Money Added",
+      "timestamp": "2026-01-10T18:13:26.422Z",
+      "deleted": false
+    },
+    {
+      "id": "1768068820145",
+      "userId": "1",
+      "type": "debit",
+      "amount": 1000,
+      "status": "success",
+      "recipient": "2",
+      "description": "Transfer to User 2",
+      "timestamp": "2026-01-10T18:13:40.145Z",
+      "deleted": false
+    },
+    {
+      "id": "1768068820146",
+      "userId": "1",
+      "type": "fee",
+      "amount": 20,
+      "status": "success",
+      "recipient": "System",
+      "description": "Transaction Fee",
+      "timestamp": "2026-01-10T18:13:40.145Z",
       "deleted": false
     }
   ]
